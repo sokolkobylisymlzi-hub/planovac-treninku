@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>Plánovač tréninku</title>
+  <meta name="apple-mobile-web-app-title" content="Plánovač" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <style>
+    :root {
+      --bg:       #0f172a;
+      --surface:  #1e293b;
+      --border:   #334155;
+      --muted:    #64748b;
+      --text:     #f1f5f9;
+      --text2:    #94a3b8;
+      --blue:     #3b82f6;
+      --blue-d:   #1d4ed8;
+      --red:      #ef4444;
+      --amber:    #f59e0b;
+      --emerald:  #10b981;
+      --radius:   14px;
+      --radius-s: 8px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 15px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ── Layout ──────────────────────────────────────────────── */
+    #app { display: flex; flex-direction: column; height: 100dvh; }
+
+    header {
+      background: #0f172a;
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    header .logo {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #3b82f6, #6366f1);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    header h1 { font-size: 16px; font-weight: 700; color: var(--text); }
+    header p  { font-size: 11px; color: var(--text2); margin-top: 1px; }
+    header .spacer { flex: 1; }
+
+    #section-tabs {
+      display: flex;
+      gap: 6px;
+      padding: 10px 16px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .section-btn {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      border-radius: var(--radius-s);
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      background: var(--surface);
+      color: var(--text2);
+      transition: background .15s, color .15s;
+    }
+    .section-btn.active {
+      background: var(--blue);
+      color: #fff;
+    }
+
+    #main { flex: 1; overflow-y: auto; padding: 12px 16px 80px; }
+
+    /* ── Metainformace tréninku ───────────────────────────────── */
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .meta-grid label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 3px; }
+    .meta-grid input, .meta-grid select {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-s);
+      color: var(--text);
+      font-size: 14px;
+      padding: 8px 10px;
+    }
+    .meta-grid input:focus, .meta-grid select:focus {
+      outline: none;
+      border-color: var(--blue);
+    }
+
+    /* ── Bloky ───────────────────────────────────────────────── */
+    .block {
+      background: #1e293b;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    .block-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: #263346;
+      border-bottom: 1px solid var(--border);
+    }
+    .block-time {
+      font-family: monospace;
+      font-size: 12px;
+      color: #93c5fd;
+      flex-shrink: 0;
+    }
+    .block-name-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      border-bottom: 1px dashed var(--border);
+      color: var(--text);
+      font-weight: 700;
+      font-size: 14px;
+      padding: 2px 4px;
+      min-width: 0;
+    }
+    .block-name-input:focus { outline: none; border-color: var(--blue); }
+    .block-dur {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--text2);
+      flex-shrink: 0;
+    }
+    .block-dur input {
+      width: 46px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 12px;
+      font-family: monospace;
+      text-align: center;
+      padding: 3px 4px;
+    }
+    .block-dur input:focus { outline: none; border-color: var(--blue); }
+    .block-actions { display: flex; gap: 2px; }
+    .icon-btn {
+      width: 30px; height: 30px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text2);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      transition: background .15s, color .15s;
+    }
+    .icon-btn:active { background: var(--border); }
+    .icon-btn.del:active { color: var(--red); }
+
+    .block-body { padding: 10px 12px; }
+
+    /* ── Cvičení v bloku ─────────────────────────────────────── */
+    .drill-item {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: var(--radius-s);
+      padding: 10px;
+      margin-bottom: 8px;
+    }
+    .drill-item-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .drill-item-info { flex: 1; min-width: 0; }
+    .drill-item-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .drill-item-sub {
+      font-size: 11px;
+      color: var(--text2);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .drill-item-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .drill-item-controls input {
+      width: 46px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 12px;
+      font-family: monospace;
+      text-align: center;
+      padding: 4px;
+    }
+    .drill-item-controls input:focus { outline: none; border-color: var(--blue); }
+    .drill-item-controls span { font-size: 11px; color: var(--text2); }
+    .drill-detail {
+      margin-top: 8px;
+      padding: 8px;
+      background: #1e293b;
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--text2);
+      line-height: 1.5;
+    }
+    .drill-detail strong { color: var(--text); }
+    .drill-detail .tag { color: #86efac; }
+    .drill-detail .tag-warn { color: #fca5a5; }
+    .drill-detail .tag-info { color: #93c5fd; }
+    .drill-note {
+      margin-top: 6px;
+      width: 100%;
+      background: #1e293b;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 12px;
+      padding: 6px 8px;
+      resize: none;
+      min-height: 34px;
+    }
+    .drill-note:focus { outline: none; border-color: var(--blue); }
+
+    /* ── Hledání do bloku ────────────────────────────────────── */
+    .search-box {
+      background: #0f172a;
+      border: 1px solid #475569;
+      border-radius: var(--radius-s);
+      padding: 10px 12px;
+      margin-top: 8px;
+    }
+    .search-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #93c5fd;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .search-input-wrap { position: relative; }
+    .search-input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 15px;
+      padding: 10px 36px 10px 12px;
+    }
+    .search-input:focus { outline: none; border-color: var(--blue); }
+    .search-clear {
+      position: absolute;
+      right: 8px; top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 18px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+    }
+    .search-hint { font-size: 11px; color: var(--text2); margin-top: 5px; }
+    .search-results {
+      margin-top: 6px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-s);
+      overflow: hidden;
+    }
+    .result-item {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .result-item:last-child { border-bottom: none; }
+    .result-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text);
+    }
+    .result-sub {
+      font-size: 11px;
+      color: var(--text2);
+      margin-top: 2px;
+    }
+    .result-btns {
+      display: flex;
+      gap: 6px;
+      margin-top: 7px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Tlačítka ────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 13px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      transition: opacity .15s;
+      white-space: nowrap;
+    }
+    .btn:active { opacity: .75; }
+    .btn-blue    { background: var(--blue);    color: #fff; }
+    .btn-surface { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+    .btn-red     { background: #450a0a;        color: #fca5a5; border: 1px solid #7f1d1d; }
+    .btn-sm { padding: 5px 10px; font-size: 11px; }
+
+    /* ── FAB ─────────────────────────────────────────────────── */
+    #fab-area {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      padding: 10px 16px 14px;
+      background: linear-gradient(transparent, var(--bg) 40%);
+      display: flex;
+      gap: 8px;
+    }
+    #fab-add {
+      flex: 1;
+      padding: 14px;
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      background: transparent;
+      color: var(--text2);
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: border-color .15s, color .15s;
+    }
+    #fab-add:active { border-color: var(--blue); color: var(--text); }
+
+    /* ── Celkový přehled ─────────────────────────────────────── */
+    .summary-bar {
+      background: #1e293b;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .summary-stat { text-align: center; }
+    .summary-num  { font-size: 20px; font-weight: 900; font-family: monospace; color: #93c5fd; }
+    .summary-lbl  { font-size: 10px; color: var(--text2); }
+
+    /* ── Prázdný stav ────────────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 40px 16px;
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state h2 { font-size: 16px; color: var(--text); margin-bottom: 6px; }
+    .empty-state p  { font-size: 13px; color: var(--text2); }
+
+    /* ── Loading ─────────────────────────────────────────────── */
+    #loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      height: 200px;
+      color: var(--text2);
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast ───────────────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 80px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1e293b;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-size: 13px;
+      color: var(--text);
+      opacity: 0;
+      transition: opacity .25s, transform .25s;
+      pointer-events: none;
+      z-index: 999;
+      white-space: nowrap;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── Detailní výtažek cvičení ─────────────────────────────── */
+    .drill-desc-section { margin-top: 5px; }
+    .drill-desc-section + .drill-desc-section { margin-top: 8px; }
+    .drill-desc-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+    .drill-desc-list { padding-left: 14px; }
+    .drill-desc-list li { margin-bottom: 2px; }
+
+    /* ── Osobní značky (oblíbené, štítky) ────────────────────── */
+    .star-btn {
+      width: 30px; height: 30px; border: none; background: transparent;
+      font-size: 18px; cursor: pointer; color: #475569; flex-shrink: 0; line-height: 1;
+    }
+    .star-btn.on { color: #fbbf24; }
+    .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700;
+      background: #312e81; color: #c7d2fe; border: 1px solid #4338ca; cursor: pointer;
+    }
+    .chip.filter { background: var(--surface); color: var(--text2); border-color: var(--border); }
+    .chip.filter.on { background: #4338ca; color: #fff; border-color: #6366f1; }
+    .chip.fav.on { background: #78350f; color: #fde68a; border-color: #b45309; }
+    .chip .x { opacity: .7; font-size: 12px; }
+    .tag-editor { margin-top: 6px; display: flex; gap: 6px; }
+    .tag-editor input {
+      flex: 1; min-width: 0; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text); font-size: 13px; padding: 6px 8px;
+    }
+    .tag-editor input:focus { outline: none; border-color: var(--blue); }
+    .my-note-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #fbbf24; margin-top: 8px; letter-spacing: .05em; }
+
+    /* ── Menu ────────────────────────────────────────────────── */
+    #menu-overlay {
+      position: fixed; inset: 0; background: rgba(2,6,23,.6); z-index: 50; display: none;
+    }
+    #menu-overlay.show { display: block; }
+    #menu {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      background: var(--surface); border-top: 1px solid var(--border);
+      border-radius: 18px 18px 0 0; padding: 16px 16px 24px;
+    }
+    #menu h3 { font-size: 14px; margin-bottom: 4px; }
+    #menu .menu-sub { font-size: 11px; color: var(--text2); margin-bottom: 12px; }
+    .menu-item {
+      display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 8px;
+      background: var(--bg); color: var(--text); border: 1px solid var(--border);
+      border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer;
+    }
+    .menu-item small { display: block; font-weight: 400; font-size: 11px; color: var(--text2); margin-top: 2px; }
+    .menu-item:active { border-color: var(--blue); }
+
+    /* ── Uložené tréninky ────────────────────────────────────── */
+    .training-bar {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 10px 12px; margin-bottom: 12px;
+    }
+    .training-name {
+      width: 100%; background: transparent; border: none; border-bottom: 1px dashed var(--border);
+      color: var(--text); font-size: 16px; font-weight: 800; padding: 3px 2px;
+    }
+    .training-name:focus { outline: none; border-color: var(--blue); }
+    .training-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+    .training-row input[type=date] {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-size: 13px; padding: 5px 8px; color-scheme: dark;
+    }
+    .save-state { flex: 1; font-size: 11px; color: var(--text2); min-width: 80px; }
+    .save-state.ok { color: #6ee7b7; }
+    .lib-item {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+      padding: 10px 12px; margin-bottom: 8px;
+    }
+    .lib-item.current { border-color: var(--blue); }
+    .lib-title { font-weight: 700; font-size: 14px; }
+    .lib-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+    .lib-btns { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    #menu { max-height: 85dvh; overflow-y: auto; }
+
+    /* ── Celostránkový výběr a detail cvičení ─────────────────── */
+    input[type=search]::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
+    #sheet { position: fixed; inset: 0; background: var(--bg); z-index: 60; display: none; flex-direction: column; height: 100dvh; }
+    #sheet.show { display: flex; }
+    .sheet-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .sheet-head .icon-btn { font-size: 22px; }
+    .sheet-title { flex: 1; min-width: 0; font-weight: 800; font-size: 15px; line-height: 1.25; }
+    .sheet-title small { display: block; font-weight: 400; font-size: 11px; color: var(--text2); margin-top: 1px; }
+    .sheet-search { padding: 10px 12px 8px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .sheet-search .search-input { font-size: 16px; }
+    .sheet-body { flex: 1; overflow-y: auto; padding: 8px 12px 40px; -webkit-overflow-scrolling: touch; }
+    .sheet-foot { flex-shrink: 0; padding: 10px 12px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); background: var(--bg); }
+    .sheet-foot .btn { width: 100%; justify-content: center; padding: 13px; font-size: 15px; }
+    .pick-count { font-size: 11px; color: var(--text2); margin: 4px 2px 2px; }
+    .pick-item { display: flex; gap: 6px; align-items: center; padding: 10px 2px; border-bottom: 1px solid var(--border); }
+    .pick-item .star-btn { font-size: 26px; width: 38px; height: 42px; }
+    .pick-main { flex: 1; min-width: 0; cursor: pointer; }
+    .pick-main .result-title { font-size: 14px; line-height: 1.3; }
+    .add-btn { width: 42px; height: 42px; border-radius: 10px; border: none; background: var(--blue); color: #fff; font-size: 22px; font-weight: 700; flex-shrink: 0; cursor: pointer; }
+    .add-btn.done { background: #064e3b; color: #6ee7b7; font-size: 17px; }
+    .vid-mark { color: #f87171; font-weight: 700; }
+    .btn-video { background: #7f1d1d; color: #fee2e2; border: 1px solid #b91c1c; text-decoration: none; padding: 12px 14px; font-size: 15px; width: 100%; justify-content: center; margin: 10px 0 4px; }
+    .detail-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+    .section-h { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text2); margin: 16px 0 6px; }
+    .item-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin-top: 10px; }
+    .item-card .drill-item-controls input { width: 56px; font-size: 16px; padding: 6px; }
+    .item-card .drill-note { font-size: 15px; min-height: 60px; }
+    .sheet-body .drill-detail { font-size: 14px; background: transparent; padding: 0; margin-top: 4px; }
+    .sheet-body .drill-desc-label { font-size: 11px; }
+    .sheet-body .drill-desc-list { padding-left: 18px; }
+    .sheet-body .tag-editor input, .sheet-body textarea.drill-note { font-size: 16px; }
+    .drill-row { display: flex; align-items: center; gap: 8px; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; margin-bottom: 6px; cursor: pointer; }
+    .drill-row:active { border-color: var(--blue); }
+    .drill-row .drill-item-sub { white-space: normal; }
+    .drill-row-fav { color: #fbbf24; font-size: 14px; flex-shrink: 0; }
+    .drill-row-min { font-family: monospace; font-weight: 800; color: #93c5fd; text-align: center; font-size: 16px; line-height: 1; flex-shrink: 0; }
+    .drill-row-min small { display: block; font-size: 9px; color: var(--text2); font-family: system-ui; font-weight: 400; }
+    .chev { color: var(--muted); font-size: 22px; flex-shrink: 0; }
+    .chip-row { display: flex; gap: 6px; overflow-x: auto; margin-top: 8px; padding-bottom: 2px; scrollbar-width: none; }
+    .chip-row::-webkit-scrollbar { display: none; }
+    .chip-row .chip { flex-shrink: 0; font-size: 13px; padding: 6px 12px; }
+    .chip.filter.part.on { background: #047857; border-color: #10b981; color: #fff; }
+    .filter-line { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+    .fav-check { display: flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 700; color: #fde68a; cursor: pointer; }
+    .fav-check input { width: 20px; height: 20px; accent-color: #f59e0b; }
+    .fav-check small { color: var(--text2); font-weight: 400; }
+    .more-filters { margin-top: 8px; max-height: 40dvh; overflow-y: auto; }
+    .mf-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text2); margin: 8px 0 4px; }
+    .fchips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+    .fchip { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: #172554; color: #93c5fd; border: 1px solid #1e3a8a; }
+    .fchip.part { background: #064e3b; color: #6ee7b7; border-color: #047857; }
+    .fchip.form { background: #2e1065; color: #c4b5fd; border-color: #5b21b6; }
+    .fchip.u13 { background: #451a03; color: #fcd34d; border-color: #92400e; }
+    .hide-box { margin-top: 18px; padding: 12px; border: 1px dashed #475569; border-radius: 10px; font-size: 12px; color: var(--text2); }
+    .hide-box .btn { margin-top: 8px; width: 100%; justify-content: center; padding: 11px; font-size: 14px; }
+    .pick-item.is-hidden { opacity: .55; }
+    .add-drill-btn { width: 100%; padding: 12px; border: 1px dashed #475569; border-radius: 8px; background: transparent; color: #93c5fd; font-weight: 700; font-size: 14px; cursor: pointer; }
+    .add-drill-btn:active { border-color: var(--blue); }
+  </style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo">🤾</div>
+    <div>
+      <h1>Plánovač tréninku</h1>
+      <p id="header-sub">Načítám cvičení…</p>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn btn-surface btn-sm" onclick="openLibrary()">📚 Tréninky</button>
+    <button class="icon-btn" style="font-size:22px" onclick="openMenu()" title="Menu">☰</button>
+  </header>
+  <div id="section-tabs">
+    <button class="section-btn active" id="tab-handball" onclick="switchSection('handball')">🤾 Házená</button>
+    <button class="section-btn" id="tab-school" onclick="switchSection('school')">🎓 Škola</button>
+  </div>
+  <div id="main">
+    <div id="loading">
+      <div class="spinner"></div>
+      <div>Načítám cvičení…</div>
+    </div>
+    <div id="content" style="display:none"></div>
+  </div>
+  <div id="fab-area" style="display:none">
+    <button id="fab-add" onclick="addBlock()">
+      <span style="font-size:20px">＋</span>
+      Přidat blok
+    </button>
+  </div>
+</div>
+
+<div id="menu-overlay" onclick="if(event.target===this)closeMenu()">
+  <div id="menu">
+   <div id="menu-lib" style="display:none"></div>
+   <div id="menu-main">
+    <button class="menu-item" onclick="newTraining()">📄 Nový trénink
+      <small>Rozpracovaný trénink se předtím sám uloží</small></button>
+    <button class="menu-item" onclick="openLibrary()">📚 Moje uložené tréninky
+      <small id="lib-count"></small></button>
+    <h3 style="margin-top:14px">Moje data v tomto telefonu</h3>
+    <div class="menu-sub" id="menu-info"></div>
+    <button class="menu-item" onclick="sharePlanText()">📤 Sdílet plán jako text
+      <small>Pošlete trénink třeba přes WhatsApp nebo e-mail</small></button>
+    <button class="menu-item" onclick="backupMyData()">💾 Zálohovat moje data
+      <small>Uložené tréninky, oblíbené, skrytá cvičení, štítky a poznámky do souboru</small></button>
+    <button class="menu-item" onclick="document.getElementById('restore-file').click()">📥 Obnovit ze zálohy
+      <small>Načte soubor zálohy (i do nového telefonu)</small></button>
+    <button class="menu-item" onclick="reloadDrills()">🔄 Načíst nejnovější cvičení
+      <small>Stáhne aktuální archiv z Google Drive</small></button>
+    <input type="file" id="restore-file" accept=".json,application/json" style="display:none" onchange="restoreMyData(this)" />
+   </div>
+  </div>
+</div>
+<div id="sheet"></div>
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// NASTAVENÍ – adresa, odkud se stahují cvičení (Google Apps Script u Drivu).
+// Prázdné = stahuje se z PC serveru (/api/mobile-drills).
+// ═══════════════════════════════════════════════════════════════════════════
+const DATA_URL = 'https://script.google.com/macros/s/AKfycbyja3pSE0Hs1v1RykNJMHsE1Du1a6bk6sLvBrKJcbe_NCMtvLMj5TIuwZ2RUTmkN8W6/exec';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Stav aplikace
+// ═══════════════════════════════════════════════════════════════════════════
+let allDrills   = [];   // všechna cvičení z archivu
+let drillById   = {};
+let dataInfo    = null; // { updatedAt, total, fromCache }
+let section     = 'handball';
+let blocks      = [];   // [{ id, name, plannedMinutes, items: [{drill, duration, notes}] }]
+let marks       = {};   // drillId -> { fav: bool, tags: [], note: '' }  (jen v tomto telefonu)
+let searchState = {};   // blockId -> dotaz
+let filterState = {};   // blockId -> { fav, tag, part, topics:[], form:[], zone:[], u13:[] }
+let facetDefs   = [];   // šuplíky z archivu (část tréninku, téma, forma, prostor, U13)
+let moreFilters = false; // rozbalené další filtry ve výběru
+let showHidden  = false; // zobrazit i cvičení skrytá v tomto telefonu
+let openDetails = {};   // klíč -> bool (rozbalený popis)
+let searchOpen  = {};
+let tagEditOpen = {};   // klíč -> bool (otevřený editor štítků)
+
+const STORAGE_KEY = 'mobile_plan_v1';
+const SECTION_KEY = 'mobile_section_v1';
+const MARKS_KEY   = 'mobile_marks_v1';
+const CACHE_KEY   = 'mobile_drills_cache_v1';
+const LIB_KEY     = 'mobile_library_v1';      // uložené tréninky
+const META_KEY    = 'mobile_current_meta_v1'; // název/datum rozpracovaného tréninku
+
+let library = [];   // [{ id, name, date, blocks, savedAt }]
+let meta    = { libId: null, name: '', date: '', dirty: false };
+
+// Bezpečný přístup k úložišti telefonu
+function lsGet(k) { try { return localStorage.getItem(k); } catch (_) { return null; } }
+function lsSet(k, v) {
+  try { localStorage.setItem(k, v); return true; }
+  catch (_) { toast('⚠️ Nepodařilo se uložit do telefonu'); return false; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Inicializace
+// ═══════════════════════════════════════════════════════════════════════════
+(async function init() {
+  section = lsGet(SECTION_KEY) === 'school' ? 'school' : 'handball';
+  loadPlanFromStorage();
+  loadMarks();
+  loadLibrary();
+  updateSectionTabs();
+  await loadDrills();
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('content').style.display = 'block';
+  document.getElementById('fab-area').style.display = 'flex';
+  render();
+})();
+
+async function loadDrills() {
+  const url = DATA_URL || '/api/mobile-drills';
+  try {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (!Array.isArray(data.drills)) throw new Error(data.error || 'Neplatná data');
+    setDrills(data, false);
+    lsSet(CACHE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.warn('Nelze stáhnout cvičení:', e);
+    let cached = null;
+    try { cached = JSON.parse(lsGet(CACHE_KEY) || 'null'); } catch (_) {}
+    if (cached && Array.isArray(cached.drills)) {
+      setDrills(cached, true);
+    } else {
+      document.getElementById('header-sub').textContent = 'Cvičení se nepodařilo načíst – zkontrolujte internet';
+    }
+  }
+}
+
+function setDrills(data, fromCache) {
+  allDrills = data.drills || [];
+  facetDefs = Array.isArray(data.facetDefs) ? data.facetDefs : [];
+  drillById = {};
+  allDrills.forEach(d => { drillById[d.id] = d; });
+  dataInfo = { updatedAt: data.updatedAt || data.exportedAt, total: allDrills.length, fromCache };
+  // Cvičení v uloženém plánu obnovit na nejnovější verzi textu
+  refreshDrills(blocks);
+  const date = dataInfo.updatedAt ? new Date(dataInfo.updatedAt).toLocaleDateString('cs') : '';
+  document.getElementById('header-sub').textContent =
+    `${allDrills.length} cvičení · ${date}${fromCache ? ' · offline' : ''}`;
+}
+
+async function reloadDrills() {
+  closeMenu();
+  toast('Načítám…');
+  await loadDrills();
+  render();
+  toast(dataInfo && !dataInfo.fromCache ? '✓ Cvičení aktuální' : '⚠️ Jsem offline, používám uložená data');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Sekce
+// ═══════════════════════════════════════════════════════════════════════════
+function switchSection(s) {
+  section = s;
+  lsSet(SECTION_KEY, s);
+  updateSectionTabs();
+  render();
+}
+
+function updateSectionTabs() {
+  document.getElementById('tab-handball').className = 'section-btn' + (section === 'handball' ? ' active' : '');
+  document.getElementById('tab-school').className   = 'section-btn' + (section === 'school'   ? ' active' : '');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Uložení plánu a značek (jen v tomto telefonu)
+// ═══════════════════════════════════════════════════════════════════════════
+function savePlan(markDirty = true) {
+  lsSet(STORAGE_KEY, JSON.stringify(blocks));
+  if (markDirty && !meta.dirty) { meta.dirty = true; saveMeta(); updateSaveState(); }
+}
+
+function loadPlanFromStorage() {
+  try {
+    const raw = lsGet(STORAGE_KEY);
+    if (raw) blocks = JSON.parse(raw) || [];
+  } catch (_) { blocks = []; }
+}
+
+// Texty cvičení v plánu obnovit na nejnovější verzi z archivu
+function refreshDrills(bl) {
+  bl.forEach(b => (b.items || []).forEach(it => { if (drillById[it.drill.id]) it.drill = drillById[it.drill.id]; }));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Uložené tréninky (knihovna v tomto telefonu)
+// ═══════════════════════════════════════════════════════════════════════════
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function fmtDate(s) {
+  if (!s) return '';
+  const [y, m, d] = s.split('-');
+  return `${+d}. ${+m}. ${y}`;
+}
+function defaultName() { return 'Trénink ' + fmtDate(meta.date || todayStr()); }
+function planMinutes(bl) { return bl.reduce((s, b) => s + blockDuration(b), 0); }
+
+function loadLibrary() {
+  try { library = JSON.parse(lsGet(LIB_KEY) || '[]') || []; } catch (_) { library = []; }
+  try { meta = { ...meta, ...(JSON.parse(lsGet(META_KEY) || '{}') || {}) }; } catch (_) {}
+  if (!meta.date) meta.date = todayStr();
+  if (meta.libId && !library.some(t => t.id === meta.libId)) meta.libId = null;
+}
+function saveLibrary() { usageCache = null; lsSet(LIB_KEY, JSON.stringify(library)); }
+function saveMeta() { lsSet(META_KEY, JSON.stringify(meta)); }
+
+function saveStateText() {
+  if (!meta.libId) return blocks.length ? 'Neuloženo' : '';
+  return meta.dirty ? 'Neuložené změny' : '✓ Uloženo';
+}
+function updateSaveState() {
+  const el = document.getElementById('save-state');
+  if (!el) return;
+  el.textContent = saveStateText();
+  el.className = 'save-state' + (meta.libId && !meta.dirty ? ' ok' : '');
+}
+
+function updateMeta(key, val) {
+  meta[key] = val;
+  meta.dirty = true;
+  saveMeta();
+  updateSaveState();
+}
+
+function saveTraining(silent) {
+  if (!blocks.length) { if (!silent) toast('Plán je prázdný'); return; }
+  const name = (meta.name || '').trim() || defaultName();
+  const entry = {
+    id: meta.libId || ('t' + uid()),
+    name,
+    date: meta.date || '',
+    blocks: JSON.parse(JSON.stringify(blocks)),
+    savedAt: Date.now()
+  };
+  const i = library.findIndex(t => t.id === entry.id);
+  if (i >= 0) library[i] = entry; else library.unshift(entry);
+  meta = { ...meta, libId: entry.id, name, dirty: false };
+  saveLibrary();
+  saveMeta();
+  if (!silent) { render(); toast('💾 Trénink uložen'); }
+}
+
+// Před otevřením jiného tréninku rozpracovaný uložit, ať se nic neztratí
+function stashCurrent() {
+  if (meta.dirty && blocks.length) saveTraining(true);
+}
+
+function newTraining() {
+  closeMenu();
+  const stashed = meta.dirty && blocks.length;
+  stashCurrent();
+  blocks = [];
+  meta = { libId: null, name: '', date: todayStr(), dirty: false };
+  saveMeta();
+  savePlan(false);
+  searchState = {}; filterState = {};
+  render();
+  toast(stashed ? '💾 Předchozí trénink uložen · nový začíná' : '📄 Nový trénink');
+}
+
+function openTraining(id, asCopy) {
+  const t = library.find(x => x.id === id);
+  if (!t) return;
+  if (!asCopy && meta.libId === id) { closeMenu(); return; }
+  stashCurrent();
+  blocks = JSON.parse(JSON.stringify(t.blocks || []));
+  refreshDrills(blocks);
+  meta = asCopy
+    ? { libId: null, name: t.name + ' (kopie)', date: todayStr(), dirty: true }
+    : { libId: t.id, name: t.name, date: t.date, dirty: false };
+  saveMeta();
+  savePlan(false);
+  searchState = {}; filterState = {};
+  closeMenu();
+  render();
+  document.getElementById('main').scrollTop = 0;
+  toast(asCopy ? '📋 Kopie připravena – upravte a uložte' : '📂 Trénink otevřen');
+}
+
+function deleteTraining(id) {
+  const t = library.find(x => x.id === id);
+  if (!t || !confirm(`Smazat uložený trénink „${t.name}“?`)) return;
+  library = library.filter(x => x.id !== id);
+  if (meta.libId === id) { meta.libId = null; meta.dirty = true; saveMeta(); }
+  saveLibrary();
+  renderLibrary();
+  render();
+}
+
+function openLibrary() {
+  document.getElementById('menu-main').style.display = 'none';
+  document.getElementById('menu-lib').style.display = 'block';
+  renderLibrary();
+  document.getElementById('menu-overlay').classList.add('show');
+}
+
+function renderLibrary() {
+  const el = document.getElementById('menu-lib');
+  const list = [...library].sort((a, b) => (b.date || '').localeCompare(a.date || '') || b.savedAt - a.savedAt);
+  let h = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <h3 style="flex:1">📚 Uložené tréninky (${library.length})</h3>
+      <button class="btn btn-blue btn-sm" onclick="newTraining()">＋ Nový</button>
+      <button class="icon-btn" onclick="closeMenu()">✕</button>
+    </div>`;
+  if (!list.length) {
+    h += `<div class="menu-sub">Zatím žádný uložený trénink. Poskládejte plán a stiskněte 💾 Uložit.</div>`;
+  }
+  list.forEach(t => {
+    const drills = (t.blocks || []).reduce((s, b) => s + (b.items || []).length, 0);
+    const cur = t.id === meta.libId;
+    h += `<div class="lib-item ${cur ? 'current' : ''}">
+        <div class="lib-title">${esc(t.name)}${cur ? ' <span style="color:#93c5fd;font-size:11px">· otevřený</span>' : ''}</div>
+        <div class="lib-sub">${esc(fmtDate(t.date))} · ${planMinutes(t.blocks || [])} min · ${(t.blocks || []).length} bloků · ${drills} cvičení</div>
+        <div class="lib-btns">
+          ${cur ? '' : `<button class="btn btn-blue btn-sm" onclick="openTraining('${jsStr(t.id)}')">📂 Otevřít</button>`}
+          <button class="btn btn-surface btn-sm" onclick="openTraining('${jsStr(t.id)}', true)">📋 Použít jako základ</button>
+          <button class="btn btn-red btn-sm" onclick="deleteTraining('${jsStr(t.id)}')">Smazat</button>
+        </div>
+      </div>`;
+  });
+  el.innerHTML = h;
+}
+
+function trainingBar() {
+  return `<div class="training-bar">
+      <input class="training-name" value="${esc(meta.name || '')}" placeholder="${esc(defaultName())}"
+        oninput="updateMeta('name', this.value)" />
+      <div class="training-row">
+        <input type="date" value="${esc(meta.date || '')}" onchange="updateMeta('date', this.value)" />
+        <span id="save-state" class="save-state ${meta.libId && !meta.dirty ? 'ok' : ''}">${saveStateText()}</span>
+        <button class="btn btn-blue btn-sm" onclick="saveTraining()">💾 Uložit</button>
+      </div>
+    </div>`;
+}
+
+function loadMarks() {
+  try { marks = JSON.parse(lsGet(MARKS_KEY) || '{}') || {}; } catch (_) { marks = {}; }
+}
+function saveMarks() { lsSet(MARKS_KEY, JSON.stringify(marks)); }
+function markOf(id) { return marks[id] || { fav: false, tags: [], note: '' }; }
+function setMark(id, patch) {
+  const m = { ...markOf(id), ...patch };
+  if (!m.fav && !m.hidden && !(m.tags && m.tags.length) && !(m.note && m.note.trim())) delete marks[id];
+  else marks[id] = m;
+  saveMarks();
+}
+
+function toggleFav(id) {
+  const on = !markOf(id).fav;
+  setMark(id, { fav: on });
+  render();
+  toast(on ? '⭐ Přidáno do oblíbených' : 'Odebráno z oblíbených');
+}
+
+function allMyTags() {
+  const set = new Set();
+  Object.values(marks).forEach(m => (m.tags || []).forEach(t => set.add(t)));
+  return [...set].sort((a, b) => a.localeCompare(b, 'cs'));
+}
+
+function addTag(id, inputId) {
+  const input = document.getElementById(inputId);
+  const t = (input && input.value || '').trim().replace(/\s+/g, ' ').slice(0, 30);
+  if (!t) return;
+  const tags = markOf(id).tags || [];
+  if (!tags.some(x => x.toLowerCase() === t.toLowerCase())) setMark(id, { tags: [...tags, t] });
+  render();
+  requestAnimationFrame(() => { const el = document.getElementById(inputId); if (el) el.focus(); });
+}
+
+function addExistingTag(id, t) {
+  const tags = markOf(id).tags || [];
+  if (!tags.includes(t)) setMark(id, { tags: [...tags, t] });
+  render();
+}
+
+function removeTag(id, t) {
+  setMark(id, { tags: (markOf(id).tags || []).filter(x => x !== t) });
+  render();
+}
+
+function updateMyNote(id, val) { setMark(id, { note: val }); }
+
+function toggleTagEdit(key) { tagEditOpen[key] = !tagEditOpen[key]; render(); }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Logika bloků
+// ═══════════════════════════════════════════════════════════════════════════
+function uid() { return `b${Date.now()}-${Math.random().toString(36).slice(2,6)}`; }
+
+function addBlock() {
+  const idx = blocks.filter(b => /^\d+\. blok$/.test(b.name)).length + 1;
+  blocks.push({ id: uid(), name: `${idx}. blok`, plannedMinutes: 15, items: [] });
+  savePlan();
+  render();
+  requestAnimationFrame(() => {
+    const els = document.querySelectorAll('.block');
+    if (els.length) els[els.length - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+}
+
+function removeBlock(id) {
+  if (!confirm('Smazat tento blok?')) return;
+  blocks = blocks.filter(b => b.id !== id);
+  savePlan();
+  render();
+}
+
+function moveBlock(id, dir) {
+  const i = blocks.findIndex(b => b.id === id);
+  const j = i + dir;
+  if (i < 0 || j < 0 || j >= blocks.length) return;
+  [blocks[i], blocks[j]] = [blocks[j], blocks[i]];
+  savePlan();
+  render();
+}
+
+function updateBlockName(id, name) {
+  const b = blocks.find(b => b.id === id);
+  if (b) { b.name = name; savePlan(); }
+}
+
+function updateBlockMinutes(id, val) {
+  const b = blocks.find(b => b.id === id);
+  if (b) { b.plannedMinutes = parseInt(val) || 5; savePlan(); render(); }
+}
+
+function blockDuration(b) {
+  if (b.items.length === 0) return b.plannedMinutes;
+  return b.items.reduce((s, i) => s + i.duration, 0);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Logika cvičení v bloku
+// ═══════════════════════════════════════════════════════════════════════════
+function addDrillToBlock(blockId, drillId) {
+  const b = blocks.find(b => b.id === blockId);
+  const drill = drillById[drillId];
+  if (!b || !drill) return;
+  if (b.items.some(i => i.drill.id === drill.id)) { toast('Cvičení už v bloku je'); return; }
+  b.items.push({ drill, duration: drill.durationMinutes || 10, notes: '' });
+  savePlan();
+  render();
+  toast('✓ Přidáno do bloku');
+}
+
+function removeDrillFromBlock(blockId, drillId) {
+  const b = blocks.find(b => b.id === blockId);
+  if (!b) return;
+  b.items = b.items.filter(i => i.drill.id !== drillId);
+  savePlan();
+  render();
+}
+
+function moveDrill(blockId, drillId, dir) {
+  const b = blocks.find(b => b.id === blockId);
+  if (!b) return;
+  const i = b.items.findIndex(i => i.drill.id === drillId);
+  const j = i + dir;
+  if (i < 0 || j < 0 || j >= b.items.length) return;
+  [b.items[i], b.items[j]] = [b.items[j], b.items[i]];
+  savePlan();
+  render();
+}
+
+function updateDrillDuration(blockId, drillId, val) {
+  const b = blocks.find(b => b.id === blockId);
+  if (!b) return;
+  const item = b.items.find(i => i.drill.id === drillId);
+  if (item) { item.duration = parseInt(val) || 5; savePlan(); render(); }
+}
+
+function updateDrillNotes(blockId, drillId, val) {
+  const b = blocks.find(b => b.id === blockId);
+  if (!b) return;
+  const item = b.items.find(i => i.drill.id === drillId);
+  if (item) { item.notes = val; savePlan(); }
+}
+
+function toggleDetail(key) { openDetails[key] = !openDetails[key]; render(); }
+function toggleSearchOpen(key) { searchOpen[key] = !searchOpen[key]; render(); }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Hledání a filtry
+// ═══════════════════════════════════════════════════════════════════════════
+function normalize(t) {
+  return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+const EMPTY_FILTER = () => ({ fav: false, tag: null, part: '', topics: [], form: [], zone: [], u13: [] });
+function filterOf(blockId) { return { ...EMPTY_FILTER(), ...(filterState[blockId] || {}) }; }
+function setFilter(blockId, patch) { filterState[blockId] = { ...filterOf(blockId), ...patch }; render(); }
+
+function toggleFilterFav(blockId) { setFilter(blockId, { fav: !filterOf(blockId).fav }); }
+function toggleFilterTag(blockId, tag) { const f = filterOf(blockId); setFilter(blockId, { tag: f.tag === tag ? null : tag }); }
+function setFilterPart(blockId, part) { const f = filterOf(blockId); setFilter(blockId, { part: f.part === part ? '' : part }); }
+function toggleFilterFacet(blockId, key, id) {
+  const cur = filterOf(blockId)[key] || [];
+  setFilter(blockId, { [key]: cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id] });
+}
+function clearFilters(blockId) { filterState[blockId] = { ...EMPTY_FILTER(), part: filterOf(blockId).part }; render(); }
+function toggleMoreFilters() { moreFilters = !moreFilters; render(); }
+function extraFilterCount(f) {
+  return (f.fav ? 1 : 0) + (f.tag ? 1 : 0) + ['topics','form','zone','u13'].reduce((n, k) => n + (f[k] || []).length, 0);
+}
+
+function facetDefOf(key) { return facetDefs.find(d => d.key === key); }
+function facetVals(d, key) {
+  const v = d && d.facets ? d.facets[key] : null;
+  return Array.isArray(v) ? v : (v ? [v] : []);
+}
+function facetLbl(key, id, short) {
+  const def = facetDefOf(key);
+  const o = def && def.options.find(x => x.id === id);
+  return o ? (short && o.short) || o.label : id;
+}
+function sectionHasFacets() { return facetDefs.length && allDrills.some(d => d.section === section && d.facets && d.facets.part); }
+
+// Předvolba části tréninku podle názvu bloku (Rozcvička, Hlavní část, Hra…)
+function guessPart(name) {
+  const n = normalize(name);
+  if (/rozcv|zahr|zahrat|warm/.test(n)) return 'warmup';
+  if (/prupr|techn/.test(n)) return 'technique';
+  if (/hlavn/.test(n)) return 'main';
+  if (/\bhra\b|\bhry\b|\bhru\b|zapas/.test(n)) return 'game';
+  if (/kondi/.test(n)) return 'fitness';
+  if (/zaver|protaz|uklid/.test(n)) return 'cooldown';
+  return '';
+}
+
+// Kolikrát a kdy naposledy bylo cvičení v uložených trénincích
+let usageCache = null;
+function usageOf(id) {
+  if (!usageCache) {
+    usageCache = {};
+    library.forEach(t => (t.blocks || []).forEach(b => (b.items || []).forEach(it => {
+      const k = it.drill && it.drill.id; if (!k) return;
+      const u = usageCache[k] || (usageCache[k] = { count: 0, last: '' });
+      u.count++;
+      if ((t.date || '') > u.last) u.last = t.date || '';
+    })));
+  }
+  return usageCache[id];
+}
+function usageText(id) {
+  const u = usageOf(id);
+  if (!u) return '<span style="color:#6ee7b7">zatím nepoužito</span>';
+  const d = u.last ? (() => { const [y, m, dd] = u.last.split('-'); return ` · naposledy ${+dd}. ${+m}.`; })() : '';
+  return `použito ${u.count}×${d}`;
+}
+
+function searchDrills(query, block) {
+  const q = normalize(query.trim());
+  const f = filterOf(block.id);
+  const words = q.split(/\s+/).filter(w => w.length > 1);
+
+  const list = allDrills.filter(d => {
+    if (d.section !== section) return false;
+    const m = markOf(d.id);
+    if (m.hidden && !showHidden) return false;
+    if (f.fav && !m.fav) return false;
+    if (f.tag && !(m.tags || []).includes(f.tag)) return false;
+    if (f.part && !facetVals(d, 'part').includes(f.part)) return false;
+    for (const k of ['topics', 'form', 'zone', 'u13']) {
+      const want = f[k] || [];
+      if (want.length && !want.some(w => facetVals(d, k).includes(w))) return false;
+    }
+    return true;
+  });
+
+  if (!words.length) {
+    return list.sort((a, b) => a.title.localeCompare(b.title, 'cs'));
+  }
+
+  return list.map(d => {
+    const m = markOf(d.id);
+    const haystack = normalize([
+      d.title, d.objective, d.category, d.seminarTitle, d.seminarPresenter,
+      (d.coachingPoints || []).join(' '),
+      (d.tags || []).join(' '),
+      (m.tags || []).join(' '), m.note || ''
+    ].join(' '));
+    const title = normalize(d.title);
+    const score = words.reduce((acc, w) =>
+      acc + (title.includes(w) ? 3 : 0) + (haystack.includes(w) ? 1 : 0), 0);
+    return { d, score: score + (m.fav && score > 0 ? 1 : 0) };
+  }).filter(x => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 40)
+    .map(x => x.d);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Render
+// ═══════════════════════════════════════════════════════════════════════════
+function starBtn(id) {
+  const on = markOf(id).fav;
+  return `<button class="star-btn ${on ? 'on' : ''}" onclick="toggleFav('${jsId(id)}')" title="Oblíbené">${on ? '★' : '☆'}</button>`;
+}
+
+function tagChips(id) {
+  const tags = markOf(id).tags || [];
+  if (!tags.length) return '';
+  return `<div class="chips">${tags.map(t => `<span class="chip">🏷 ${esc(t)}</span>`).join('')}</div>`;
+}
+
+function tagEditor(id, key) {
+  const m = markOf(id);
+  const inputId = 'tag-in-' + key.replace(/[^a-zA-Z0-9_-]/g, '_');
+  const others = allMyTags().filter(t => !(m.tags || []).includes(t));
+  let h = `<div class="chips">`;
+  (m.tags || []).forEach(t => {
+    h += `<span class="chip" onclick="removeTag('${jsId(id)}','${jsStr(t)}')">🏷 ${esc(t)} <span class="x">✕</span></span>`;
+  });
+  others.forEach(t => {
+    h += `<span class="chip filter" onclick="addExistingTag('${jsId(id)}','${jsStr(t)}')">＋ ${esc(t)}</span>`;
+  });
+  h += `</div>
+    <div class="tag-editor">
+      <input id="${inputId}" placeholder="Nový štítek, např. rozcvička" maxlength="30"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();addTag('${jsId(id)}','${inputId}')}" />
+      <button class="btn btn-blue btn-sm" onclick="addTag('${jsId(id)}','${inputId}')">Přidat</button>
+    </div>
+    <div class="my-note-label">Moje poznámka ke cvičení</div>
+    <textarea class="drill-note" placeholder="Platí pro cvičení ve všech plánech…"
+      oninput="updateMyNote('${jsId(id)}', this.value)">${esc(m.note || '')}</textarea>`;
+  return h;
+}
+
+function render() {
+  const content = document.getElementById('content');
+  refreshSheet();
+
+  if (blocks.length === 0) {
+    content.innerHTML = trainingBar() + `
+      <div class="empty-state">
+        <div class="icon">📋</div>
+        <h2>Zatím žádný blok</h2>
+        <p>Stiskněte + Přidat blok a začněte skládat trénink.</p>
+        ${library.length ? `<p style="margin-top:14px"><button class="btn btn-surface" onclick="openLibrary()">📚 Otevřít uložený trénink (${library.length})</button></p>` : ''}
+      </div>`;
+    return;
+  }
+
+  const starts = [];
+  blocks.reduce((t, b) => { starts.push(t); return t + blockDuration(b); }, 0);
+  const total = blocks.reduce((s, b) => s + blockDuration(b), 0);
+  const allItems = blocks.flatMap(b => b.items);
+
+  let html = trainingBar() + `
+    <div class="summary-bar">
+      <div class="summary-stat"><div class="summary-num">${total}</div><div class="summary-lbl">minut</div></div>
+      <div class="summary-stat"><div class="summary-num">${blocks.length}</div><div class="summary-lbl">bloků</div></div>
+      <div class="summary-stat"><div class="summary-num">${allItems.length}</div><div class="summary-lbl">cvičení</div></div>
+    </div>`;
+
+  const fmt = m => `${Math.floor(m/60)}:${String(m%60).padStart(2,'0')}`;
+
+  blocks.forEach((block, bi) => {
+    const start  = starts[bi];
+    const dur    = blockDuration(block);
+    const sumDur = block.items.reduce((s, i) => s + i.duration, 0);
+
+    html += `<div class="block" id="block-${block.id}">
+      <div class="block-header">
+        <span class="block-time">${fmt(start)}–${fmt(start+dur)}</span>
+        <input class="block-name-input" value="${esc(block.name)}"
+          oninput="updateBlockName('${block.id}', this.value)" />
+        <div class="block-dur">`;
+
+    if (block.items.length === 0) {
+      html += `<input type="number" min="1" max="180" value="${block.plannedMinutes}"
+        onchange="updateBlockMinutes('${block.id}', this.value)" /><span>min</span>`;
+    } else {
+      html += `<span style="font-family:monospace;font-weight:700;color:#f1f5f9">${sumDur} min</span>`;
+    }
+
+    html += `</div>
+        <div class="block-actions">
+          <button class="icon-btn" onclick="moveBlock('${block.id}', -1)" ${bi===0?'disabled':''} title="Nahoru">↑</button>
+          <button class="icon-btn" onclick="moveBlock('${block.id}', 1)"  ${bi===blocks.length-1?'disabled':''} title="Dolů">↓</button>
+          <button class="icon-btn del" onclick="removeBlock('${block.id}')" title="Smazat">✕</button>
+        </div>
+      </div>
+      <div class="block-body">`;
+
+    // Cvičení v bloku – stručný řádek, klepnutím se otevře detail
+    block.items.forEach(item => {
+      const d = item.drill;
+      const id = d.id;
+      const fav = markOf(id).fav;
+      const sub = [d.seminarPresenter, videoLink(d) ? '<span class="vid-mark">▶ video</span>' : '']
+        .filter(Boolean).map(x => x.startsWith('<') ? x : esc(x)).join(' · ');
+      const note = (item.notes || '').trim();
+      html += `
+        <div class="drill-row" onclick="openItem('${block.id}','${jsId(id)}')">
+          ${fav ? '<span class="drill-row-fav">★</span>' : ''}
+          <div class="drill-item-info">
+            <div class="drill-item-title">${esc(d.title)}</div>
+            ${sub ? `<div class="drill-item-sub">${sub}</div>` : ''}
+            ${note ? `<div class="drill-item-sub" style="color:#fbbf24">📝 ${esc(note)}</div>` : ''}
+          </div>
+          <div class="drill-row-min">${item.duration}<small>min</small></div>
+          <span class="chev">›</span>
+        </div>`;
+    });
+
+    html += `<button class="add-drill-btn" onclick="openPicker('${block.id}')">＋ Přidat cvičení</button>`;
+    html += `</div></div>`; // .block-body .block
+  });
+
+  content.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Video (YouTube) – otevře se v aplikaci YouTube od začátku cvičení
+// ═══════════════════════════════════════════════════════════════════════════
+function videoLink(d) {
+  const u = String((d && d.videoUrl) || '').trim();
+  if (!u) return '';
+  const t = Math.max(0, parseInt(d.videoStart, 10) || 0);
+  const m = u.match(/(?:[?&]v=|youtu\.be\/|\/shorts\/|\/embed\/|\/live\/)([\w-]{11})/);
+  if (m) return `https://youtu.be/${m[1]}${t ? `?t=${t}` : ''}`;
+  return u;
+}
+function fmtSec(t) {
+  t = Math.max(0, parseInt(t, 10) || 0);
+  const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
+  return (h ? `${h}:${String(m).padStart(2,'0')}` : `${m}`) + ':' + String(s).padStart(2,'0');
+}
+function videoButton(d) {
+  const link = videoLink(d);
+  if (!link) return '';
+  const t = parseInt(d.videoStart, 10) || 0;
+  return `<a class="btn btn-video" href="${esc(link)}" target="_blank" rel="noopener">▶ Pustit video${t ? ` od ${fmtSec(t)}` : ''}</a>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Výběr cvičení a detail cvičení – přes celou obrazovku
+// ═══════════════════════════════════════════════════════════════════════════
+let sheet = null;   // { mode: 'pick'|'item', blockId, view: 'list'|'detail', drillId, scroll }
+
+function showSheet() { document.getElementById('sheet').classList.add('show'); }
+function closeSheetNow() {
+  sheet = null;
+  const el = document.getElementById('sheet');
+  el.classList.remove('show');
+  el.innerHTML = '';
+}
+function sheetBack() { history.back(); }
+window.addEventListener('popstate', () => {
+  if (!sheet) return;
+  if (sheet.mode === 'pick' && sheet.view === 'detail') {
+    sheet.view = 'list';
+    sheet.drillId = null;
+    renderSheet();
+    const body = document.getElementById('sheet-body');
+    if (body) body.scrollTop = sheet.scroll || 0;
+  } else {
+    closeSheetNow();
+  }
+});
+
+function openPicker(blockId) {
+  if (!filterState[blockId]) {
+    const b = blocks.find(x => x.id === blockId);
+    filterState[blockId] = { ...EMPTY_FILTER(), part: b ? guessPart(b.name) : '' };
+  }
+  sheet = { mode: 'pick', blockId, view: 'list', drillId: null, scroll: 0 };
+  history.pushState({ sheet: 1 }, '');
+  renderSheet();
+  showSheet();
+}
+function openPickDetail(drillId) {
+  const body = document.getElementById('sheet-body');
+  sheet.scroll = body ? body.scrollTop : 0;
+  sheet.view = 'detail';
+  sheet.drillId = drillId;
+  history.pushState({ sheet: 2 }, '');
+  renderSheet();
+}
+function openItem(blockId, drillId) {
+  sheet = { mode: 'item', blockId, view: 'detail', drillId };
+  history.pushState({ sheet: 1 }, '');
+  renderSheet();
+  showSheet();
+}
+
+// Při psaní se překreslí jen výsledky – políčko s klávesnicí zůstane
+function onPickSearch(value) {
+  if (!sheet) return;
+  searchState[sheet.blockId] = value;
+  const clr = document.getElementById('pick-clear');
+  if (clr) clr.style.display = value ? 'block' : 'none';
+  renderPickParts();
+}
+function clearPickSearch() {
+  const input = document.getElementById('pick-input');
+  if (input) { input.value = ''; input.focus(); }
+  onPickSearch('');
+}
+function quickAdd(drillId) {
+  if (!sheet) return;
+  addDrillToBlock(sheet.blockId, drillId);
+}
+function addFromDetail() {
+  if (!sheet) return;
+  addDrillToBlock(sheet.blockId, sheet.drillId);
+  history.back();
+}
+function removeFromDetail() {
+  if (!sheet) return;
+  removeDrillFromBlock(sheet.blockId, sheet.drillId);
+  toast('Odebráno z bloku');
+  history.back();
+}
+
+function refreshSheet() {
+  if (!sheet) return;
+  if (sheet.mode === 'pick' && sheet.view === 'list' && document.getElementById('pick-input')) renderPickParts();
+  else renderSheet();
+}
+
+function renderSheet() {
+  const el = document.getElementById('sheet');
+  if (!sheet) return;
+  const block = blocks.find(b => b.id === sheet.blockId);
+  if (!block) { closeSheetNow(); return; }
+
+  if (sheet.mode === 'pick' && sheet.view === 'list') {
+    const q = searchState[block.id] || '';
+    el.innerHTML = `
+      <div class="sheet-head">
+        <button class="icon-btn" onclick="sheetBack()" title="Zpět">←</button>
+        <div class="sheet-title">Přidat do: ${esc(block.name)}<small id="pick-head-sub"></small></div>
+        <button class="btn btn-blue" onclick="sheetBack()">Hotovo</button>
+      </div>
+      <div class="sheet-search">
+        <div class="search-input-wrap">
+          <input type="search" id="pick-input" class="search-input" enterkeyhint="search" autocomplete="off"
+            placeholder="${section==='school' ? 'Hledat: rozcvička, vybíjená, štafeta…' : 'Hledat: rozcvička, křížení, střelba…'}"
+            value="${esc(q)}" oninput="onPickSearch(this.value)"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}" />
+          <button class="search-clear" id="pick-clear" onclick="clearPickSearch()" style="display:${q ? 'block' : 'none'}">✕</button>
+        </div>
+        <div id="pick-chips"></div>
+      </div>
+      <div class="sheet-body" id="sheet-body"><div id="pick-results"></div></div>`;
+    el.dataset.drill = '';
+    renderPickParts();
+    return;
+  }
+
+  const inBlock = block.items.find(i => i.drill.id === sheet.drillId);
+  const drill = (sheet.mode === 'item' && inBlock) ? inBlock.drill : drillById[sheet.drillId];
+  if (!drill) { closeSheetNow(); return; }
+  const id = drill.id;
+  const on = markOf(id).fav;
+  const sub = [`${drill.durationMinutes || '?'} min`, drill.seminarPresenter].filter(Boolean).map(esc).join(' · ');
+
+  let h = `
+    <div class="sheet-head">
+      <button class="icon-btn" onclick="sheetBack()" title="Zpět">←</button>
+      <div class="sheet-title">${esc(drill.title)}<small>${sub}</small></div>
+      <button class="star-btn ${on ? 'on' : ''}" style="font-size:24px;width:40px;height:40px" onclick="toggleFav('${jsId(id)}')">${on ? '★' : '☆'}</button>
+    </div>
+    <div class="sheet-body" id="sheet-body">`;
+
+  h += facetLine(drill);
+  h += `<div class="detail-sub" style="margin-top:6px">${usageText(id)}</div>`;
+  h += videoButton(drill);
+
+  if (sheet.mode === 'item' && inBlock) {
+    const idx = block.items.indexOf(inBlock);
+    h += `<div class="item-card">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:6px">V tomto tréninku · ${esc(block.name)}</div>
+        <div class="drill-item-controls" style="flex-wrap:wrap">
+          <input type="number" min="1" max="120" value="${inBlock.duration}"
+            onchange="updateDrillDuration('${block.id}','${jsId(id)}',this.value)" /><span>min</span>
+          <span style="flex:1"></span>
+          <button class="icon-btn" onclick="moveDrill('${block.id}','${jsId(id)}',-1)" ${idx===0?'disabled':''} title="Posunout výš">↑</button>
+          <button class="icon-btn" onclick="moveDrill('${block.id}','${jsId(id)}',1)" ${idx===block.items.length-1?'disabled':''} title="Posunout níž">↓</button>
+          <button class="btn btn-red btn-sm" onclick="removeFromDetail()">Odebrat</button>
+        </div>
+        <textarea class="drill-note" placeholder="Poznámka k tomuto tréninku…"
+          oninput="updateDrillNotes('${block.id}','${jsId(id)}',this.value)">${esc(inBlock.notes || '')}</textarea>
+      </div>`;
+  }
+
+  h += `<div class="section-h">Popis cvičení</div>` + renderDrillDetail(drill, true);
+  h += `<div class="section-h">Moje štítky a poznámka</div>` + tagEditor(id, 'sheet');
+  h += markOf(id).hidden
+    ? `<div class="hide-box"><div>Tohle cvičení máte v tomto telefonu skryté.</div><button class="btn btn-surface" onclick="unhideDrill('${jsId(id)}')">↩ Znovu nabízet</button></div>`
+    : `<div class="hide-box"><div>Nechcete toto cvičení? Skryje se jen v tomto telefonu, v archivu zůstane.</div><button class="btn btn-red" onclick="hideDrill('${jsId(id)}')">🚫 Nenabízet v tomto telefonu</button></div>`;
+  h += `</div>`;
+
+  if (sheet.mode === 'pick') {
+    const already = block.items.some(i => i.drill.id === id);
+    h += `<div class="sheet-foot">${already
+      ? `<button class="btn btn-surface" disabled>✓ Už je v bloku</button>`
+      : `<button class="btn btn-blue" onclick="addFromDetail()">＋ Přidat do bloku „${esc(block.name)}“</button>`}</div>`;
+  }
+
+  const prev = document.getElementById('sheet-body');
+  const keep = prev && el.dataset.drill === id ? prev.scrollTop : 0;
+  el.dataset.drill = id;
+  el.innerHTML = h;
+  const body = document.getElementById('sheet-body');
+  if (body && keep) body.scrollTop = keep;
+}
+
+function hiddenCount() { return Object.values(marks).filter(m => m.hidden).length; }
+function toggleShowHidden() { showHidden = !showHidden; render(); }
+function hideDrill(id) {
+  setMark(id, { hidden: true });
+  toast('🚫 Cvičení se už nebude nabízet');
+  if (sheet && sheet.mode === 'pick' && sheet.view === 'detail') history.back();
+  else render();
+}
+function unhideDrill(id) {
+  setMark(id, { hidden: false });
+  toast('↩ Cvičení se zase nabízí');
+  render();
+}
+
+function facetLine(d) {
+  if (!d.facets) return '';
+  const parts = [];
+  facetVals(d, 'part').forEach(v => parts.push(`<span class="fchip part">${esc(facetLbl('part', v, true))}</span>`));
+  facetVals(d, 'topics').forEach(v => parts.push(`<span class="fchip">${esc(facetLbl('topics', v, true))}</span>`));
+  facetVals(d, 'form').forEach(v => parts.push(`<span class="fchip form">${esc(facetLbl('form', v, true))}</span>`));
+  facetVals(d, 'u13').forEach(v => { if (v !== 'yes') parts.push(`<span class="fchip u13">U13: ${esc(facetLbl('u13', v))}</span>`); });
+  return parts.length ? `<div class="fchips">${parts.join('')}</div>` : '';
+}
+
+function renderPickParts() {
+  const block = sheet && blocks.find(b => b.id === sheet.blockId);
+  if (!block) return;
+  const q = searchState[block.id] || '';
+  const f = filterOf(block.id);
+  const myTags = allMyTags();
+  const favCount = Object.values(marks).filter(m => m.fav).length;
+
+  const headSub = document.getElementById('pick-head-sub');
+  if (headSub) headSub.textContent = `${block.items.length} cvičení · ${blockDuration(block)} min`;
+
+  let c = '';
+  const facetsOn = sectionHasFacets();
+  if (facetsOn) {
+    const partDef = facetDefOf('part');
+    c += `<div class="chip-row">`;
+    c += `<span class="chip filter part ${!f.part ? 'on' : ''}" onclick="setFilter('${block.id}',{part:''})">Vše</span>`;
+    partDef.options.forEach(o => {
+      c += `<span class="chip filter part ${f.part === o.id ? 'on' : ''}" onclick="setFilterPart('${block.id}','${o.id}')">${esc(o.short || o.label)}</span>`;
+    });
+    c += `</div>`;
+  }
+  const extra = extraFilterCount(f);
+  c += `<div class="filter-line">
+      <label class="fav-check"><input type="checkbox" ${f.fav ? 'checked' : ''} onchange="toggleFilterFav('${block.id}')" /> Jen oblíbené ★${favCount ? ` <small>(${favCount})</small>` : ''}</label>
+      <span style="flex:1"></span>
+      ${extra - (f.fav ? 1 : 0) > 0 ? `<button class="btn btn-surface btn-sm" onclick="clearFilters('${block.id}')">Zrušit filtry</button>` : ''}
+      <button class="btn btn-surface btn-sm" onclick="toggleMoreFilters()">${moreFilters ? '▲' : '▼'} Filtry${extra - (f.fav ? 1 : 0) > 0 ? ` (${extra - (f.fav ? 1 : 0)})` : ''}</button>
+    </div>`;
+  if (moreFilters) {
+    c += `<div class="more-filters">`;
+    if (facetsOn) {
+      ['topics', 'form', 'zone', 'u13'].forEach(k => {
+        const def = facetDefOf(k); if (!def) return;
+        c += `<div class="mf-label">${esc(def.label)}</div><div class="chips" style="margin-top:0">`;
+        def.options.forEach(o => {
+          const on = (f[k] || []).includes(o.id);
+          c += `<span class="chip filter ${on ? 'on' : ''}" onclick="toggleFilterFacet('${block.id}','${k}','${o.id}')">${esc(o.short || o.label)}</span>`;
+        });
+        c += `</div>`;
+      });
+    }
+    if (myTags.length) {
+      c += `<div class="mf-label">Moje štítky</div><div class="chips" style="margin-top:0">`;
+      myTags.forEach(t => {
+        c += `<span class="chip filter ${f.tag === t ? 'on' : ''}" onclick="toggleFilterTag('${block.id}','${jsStr(t)}')">🏷 ${esc(t)}</span>`;
+      });
+      c += `</div>`;
+    }
+    const hc = hiddenCount();
+    if (hc) {
+      c += `<div class="mf-label">Skrytá cvičení</div><div class="chips" style="margin-top:0">
+        <span class="chip filter ${showHidden ? 'on' : ''}" onclick="toggleShowHidden()">🚫 Zobrazit skrytá (${hc})</span></div>`;
+    }
+    c += `</div>`;
+  }
+  const chipsEl = document.getElementById('pick-chips');
+  if (chipsEl) chipsEl.innerHTML = c;
+
+  const results = searchDrills(q, block);
+  const used = new Set(block.items.map(i => i.drill.id));
+  const words = normalize(q.trim()).split(/\s+/).filter(w => w.length > 1);
+  let h = `<div class="pick-count">${words.length ? `Nalezeno: ${results.length}` : `${results.length} cvičení`} · klepněte na název pro popis a video</div>`;
+  if (!results.length) {
+    h += `<div class="search-hint" style="padding:16px 2px">Nic nenalezeno. Zkuste jiné slovo.</div>`;
+  }
+  results.forEach(d => {
+    const isUsed = used.has(d.id);
+    const sub = [`${d.durationMinutes || '?'} min`, d.seminarPresenter].filter(Boolean).map(esc).join(' · ');
+    h += `
+      <div class="pick-item${markOf(d.id).hidden ? ' is-hidden' : ''}">
+        ${starBtn(d.id)}
+        <div class="pick-main" onclick="openPickDetail('${jsId(d.id)}')">
+          <div class="result-title">${esc(d.title)}</div>
+          <div class="result-sub">${sub}${videoLink(d) ? ' · <span class="vid-mark">▶</span>' : ''}</div>
+          ${facetLine(d)}
+          <div class="result-sub">${markOf(d.id).hidden ? '<span style="color:#fca5a5">🚫 skryté</span> · ' : ''}${usageText(d.id)}</div>
+          ${tagChips(d.id)}
+        </div>
+        ${isUsed
+          ? `<button class="add-btn done" disabled title="Už je v bloku">✓</button>`
+          : `<button class="add-btn" onclick="quickAdd('${jsId(d.id)}')" title="Přidat do bloku">＋</button>`}
+      </div>`;
+  });
+  const resEl = document.getElementById('pick-results');
+  if (resEl) resEl.innerHTML = h;
+}
+
+function renderDrillDetail(drill, inSheet) {
+  let h = `<div class="drill-detail">`;
+  if (drill.objective) h += `<div class="drill-desc-section"><div class="drill-desc-label tag">Cíl</div>${esc(drill.objective)}</div>`;
+  if (drill.organization) h += `<div class="drill-desc-section"><div class="drill-desc-label" style="color:#94a3b8">Organizace</div>${esc(drill.organization)}</div>`;
+  const list = (items, label, cls, style, ordered) => {
+    if (!items || !items.length) return '';
+    const tag = ordered ? 'ol' : 'ul';
+    return `<div class="drill-desc-section"><div class="drill-desc-label ${cls}" ${style ? `style="${style}"` : ''}>${label}</div><${tag} class="drill-desc-list">${items.map(k => `<li>${esc(k)}</li>`).join('')}</${tag}></div>`;
+  };
+  h += list(drill.execution, 'Průběh', 'tag-info', '', true);
+  h += list(drill.coachingPoints, 'Klíčové pokyny', '', 'color:#fbbf24', false);
+  h += list(drill.commonMistakes, 'Časté chyby', 'tag-warn', '', false);
+  h += list(drill.progressions, 'Varianty', '', 'color:#c4b5fd', false);
+  const meta = [drill.playerCount, drill.courtZone, ...(drill.equipment||[])].filter(Boolean);
+  if (meta.length) h += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #334155;font-size:11px;color:#64748b">${meta.map(esc).join(' · ')}</div>`;
+  if (drill.seminarTitle) h += `<div style="margin-top:4px;font-size:11px;color:#64748b">Seminář: ${esc(drill.seminarTitle)}</div>`;
+  const note = markOf(drill.id).note;
+  if (!inSheet && note && note.trim()) h += `<div class="drill-desc-section"><div class="drill-desc-label" style="color:#fbbf24">Moje poznámka</div>${esc(note)}</div>`;
+  h += `</div>`;
+  return h;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Menu: sdílení, záloha, obnova
+// ═══════════════════════════════════════════════════════════════════════════
+function openMenu() {
+  const favs = Object.values(marks).filter(m => m.fav).length;
+  const tagged = Object.values(marks).filter(m => (m.tags || []).length).length;
+  const date = dataInfo && dataInfo.updatedAt ? new Date(dataInfo.updatedAt).toLocaleString('cs') : '–';
+  document.getElementById('menu-main').style.display = 'block';
+  document.getElementById('menu-lib').style.display = 'none';
+  document.getElementById('lib-count').textContent = library.length
+    ? `${library.length} uložených – otevřít, upravit, použít jako základ` : 'Zatím žádný uložený trénink';
+  document.getElementById('menu-info').textContent =
+    `${favs} oblíbených · ${tagged} cvičení se štítky · ${hiddenCount()} skrytých · archiv z ${date}${dataInfo && dataInfo.fromCache ? ' (offline)' : ''}`;
+  document.getElementById('menu-overlay').classList.add('show');
+}
+function closeMenu() { document.getElementById('menu-overlay').classList.remove('show'); }
+
+function planAsText() {
+  const fmt = m => `${Math.floor(m/60)}:${String(m%60).padStart(2,'0')}`;
+  let t = 0;
+  const total = blocks.reduce((s, b) => s + blockDuration(b), 0);
+  let out = `${(meta.name || '').trim() || defaultName()}${meta.date ? ' – ' + fmtDate(meta.date) : ''} (${total} min)\n`;
+  blocks.forEach(b => {
+    const d = blockDuration(b);
+    out += `\n${fmt(t)}–${fmt(t + d)}  ${b.name} (${d} min)\n`;
+    b.items.forEach(it => {
+      out += `  • ${it.drill.title} – ${it.duration} min\n`;
+      if (it.notes && it.notes.trim()) out += `    ${it.notes.trim()}\n`;
+    });
+    t += d;
+  });
+  return out;
+}
+
+async function sharePlanText() {
+  closeMenu();
+  if (!blocks.length) { toast('Plán je prázdný'); return; }
+  const text = planAsText();
+  try {
+    if (navigator.share) { await navigator.share({ title: 'Plán tréninku', text }); return; }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  try { await navigator.clipboard.writeText(text); toast('✓ Plán zkopírován do schránky'); }
+  catch (_) { prompt('Zkopírujte plán:', text); }
+}
+
+async function backupMyData() {
+  closeMenu();
+  const payload = { app: 'planovac-treninku', version: 2, savedAt: Date.now(), marks, plan: blocks, meta, library, section };
+  const json = JSON.stringify(payload);
+  const name = `planovac-zaloha-${new Date().toISOString().slice(0,10)}.json`;
+  try {
+    const file = new File([json], name, { type: 'application/json' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'Záloha plánovače' });
+      return;
+    }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+  a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast('✓ Záloha stažena');
+}
+
+function restoreMyData(input) {
+  closeMenu();
+  const file = input.files && input.files[0];
+  input.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (data.app !== 'planovac-treninku') throw new Error('Tohle není záloha plánovače');
+      const replacePlan = !blocks.length || confirm('Nahradit současný plán plánem ze zálohy?\n(Oblíbené a štítky se sloučí vždy.)');
+      // Značky sloučit: štítky spojit, oblíbené zachovat, poznámku ze zálohy použít, když tu žádná není
+      Object.entries(data.marks || {}).forEach(([id, m]) => {
+        const cur = markOf(id);
+        marks[id] = {
+          fav: !!(cur.fav || m.fav),
+          hidden: !!(cur.hidden || m.hidden),
+          tags: [...new Set([...(cur.tags || []), ...(m.tags || [])])],
+          note: (cur.note && cur.note.trim()) ? cur.note : (m.note || '')
+        };
+      });
+      saveMarks();
+      // Uložené tréninky sloučit podle ID (novější verze vyhrává)
+      let added = 0;
+      (Array.isArray(data.library) ? data.library : []).forEach(t => {
+        if (!t || !t.id) return;
+        const i = library.findIndex(x => x.id === t.id);
+        if (i < 0) { library.push(t); added++; }
+        else if ((t.savedAt || 0) > (library[i].savedAt || 0)) library[i] = t;
+      });
+      saveLibrary();
+      if (replacePlan && Array.isArray(data.plan)) {
+        blocks = data.plan;
+        refreshDrills(blocks);
+        meta = { libId: null, name: '', date: todayStr(), dirty: true, ...(data.meta || {}) };
+        if (meta.libId && !library.some(t => t.id === meta.libId)) meta.libId = null;
+        saveMeta();
+        savePlan(false);
+      }
+      render();
+      toast(`✓ Záloha obnovena${added ? ` · ${added} tréninků přidáno` : ''}`);
+    } catch (e) {
+      alert('Zálohu se nepodařilo načíst: ' + e.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Pomocné
+// ═══════════════════════════════════════════════════════════════════════════
+function esc(str) {
+  return String(str ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+// Text vložený do onclick='…' uvnitř atributu v uvozovkách
+function jsStr(s) { return esc(String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'")); }
+const jsId = jsStr;
+
+let toastTimer = null;
+function toast(msg, ms = 2000) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), ms);
+}
+
+</script>
+</body>
+</html>
