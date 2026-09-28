@@ -569,11 +569,25 @@
     .fchips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
     .fchip { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: #172554; color: #93c5fd; border: 1px solid #1e3a8a; }
     .fchip.part { background: #064e3b; color: #6ee7b7; border-color: #047857; }
+    .fchip.post { background: #0c4a6e; color: #7dd3fc; border-color: #0369a1; }
     .fchip.form { background: #2e1065; color: #c4b5fd; border-color: #5b21b6; }
     .fchip.u13 { background: #451a03; color: #fcd34d; border-color: #92400e; }
     .hide-box { margin-top: 18px; padding: 12px; border: 1px dashed #475569; border-radius: 10px; font-size: 12px; color: var(--text2); }
     .hide-box .btn { margin-top: 8px; width: 100%; justify-content: center; padding: 11px; font-size: 14px; }
     .pick-item.is-hidden { opacity: .55; }
+    .video-frame { position: relative; width: 100%; aspect-ratio: 16 / 9; margin-top: 10px; background: #000; border-radius: 10px; overflow: hidden; }
+    .video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    .video-bar { display: flex; align-items: center; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+    .video-ext { font-size: 12px; color: #93c5fd; display: inline-block; margin-top: 6px; }
+    .q-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text2); margin: 12px 0 4px; }
+    .q-input { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 16px; padding: 10px 12px; font-family: inherit; }
+    .q-input:focus { outline: none; border-color: var(--blue); }
+    .q-msg { margin-top: 12px; padding: 10px 12px; border-radius: 8px; font-size: 14px; }
+    .q-msg.ok { background: #064e3b; color: #a7f3d0; }
+    .q-msg.warn { background: #451a03; color: #fde68a; }
+    .q-msg.err { background: #450a0a; color: #fecaca; }
+    .q-item { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; word-break: break-all; }
+    .q-item a { color: #93c5fd; }
     .add-drill-btn { width: 100%; padding: 12px; border: 1px dashed #475569; border-radius: 8px; background: transparent; color: #93c5fd; font-weight: 700; font-size: 14px; cursor: pointer; }
     .add-drill-btn:active { border-color: var(--blue); }
   </style>
@@ -625,6 +639,8 @@
       <small>Uložené tréninky, oblíbené, skrytá cvičení, štítky a poznámky do souboru</small></button>
     <button class="menu-item" onclick="document.getElementById('restore-file').click()">📥 Obnovit ze zálohy
       <small>Načte soubor zálohy (i do nového telefonu)</small></button>
+    <button class="menu-item" onclick="openQueueForm()">🎬 Poslat video k rozboru
+      <small>Odkaz se uloží do fronty a zpracuje se v PC aplikaci</small></button>
     <button class="menu-item" onclick="reloadDrills()">🔄 Načíst nejnovější cvičení
       <small>Stáhne aktuální archiv z Google Drive</small></button>
     <input type="file" id="restore-file" accept=".json,application/json" style="display:none" onchange="restoreMyData(this)" />
@@ -640,6 +656,9 @@
 // Prázdné = stahuje se z PC serveru (/api/mobile-drills).
 // ═══════════════════════════════════════════════════════════════════════════
 const DATA_URL = 'https://script.google.com/macros/s/AKfycbyja3pSE0Hs1v1RykNJMHsE1Du1a6bk6sLvBrKJcbe_NCMtvLMj5TIuwZ2RUTmkN8W6/exec';
+// Fronta videí k rozboru (Google skript). Klíč jen brání náhodnému spamu.
+const QUEUE_URL = 'https://script.google.com/macros/s/AKfycbyja3pSE0Hs1v1RykNJMHsE1Du1a6bk6sLvBrKJcbe_NCMtvLMj5TIuwZ2RUTmkN8W6/exec';
+const QUEUE_KEY = 'fronta-J5k1YIj4HkLz';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Stav aplikace
@@ -1087,7 +1106,7 @@ function normalize(t) {
   return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 }
 
-const EMPTY_FILTER = () => ({ fav: false, tag: null, part: '', topics: [], form: [], zone: [], u13: [] });
+const EMPTY_FILTER = () => ({ fav: false, tag: null, part: '', topics: [], posts: [], form: [], zone: [], u13: [] });
 function filterOf(blockId) { return { ...EMPTY_FILTER(), ...(filterState[blockId] || {}) }; }
 function setFilter(blockId, patch) { filterState[blockId] = { ...filterOf(blockId), ...patch }; render(); }
 
@@ -1101,7 +1120,7 @@ function toggleFilterFacet(blockId, key, id) {
 function clearFilters(blockId) { filterState[blockId] = { ...EMPTY_FILTER(), part: filterOf(blockId).part }; render(); }
 function toggleMoreFilters() { moreFilters = !moreFilters; render(); }
 function extraFilterCount(f) {
-  return (f.fav ? 1 : 0) + (f.tag ? 1 : 0) + ['topics','form','zone','u13'].reduce((n, k) => n + (f[k] || []).length, 0);
+  return (f.fav ? 1 : 0) + (f.tag ? 1 : 0) + ['topics','posts','form','zone','u13'].reduce((n, k) => n + (f[k] || []).length, 0);
 }
 
 function facetDefOf(key) { return facetDefs.find(d => d.key === key); }
@@ -1161,9 +1180,11 @@ function searchDrills(query, block) {
     if (f.fav && !m.fav) return false;
     if (f.tag && !(m.tags || []).includes(f.tag)) return false;
     if (f.part && !facetVals(d, 'part').includes(f.part)) return false;
-    for (const k of ['topics', 'form', 'zone', 'u13']) {
+    for (const k of ['topics', 'posts', 'form', 'zone', 'u13']) {
       const want = f[k] || [];
-      if (want.length && !want.some(w => facetVals(d, k).includes(w))) return false;
+      const has = facetVals(d, k);
+      // „Všechny posty“ se hodí pro kterýkoli post
+      if (want.length && !want.some(w => has.includes(w) || (k === 'posts' && has.includes('all')))) return false;
     }
     return true;
   });
@@ -1328,11 +1349,34 @@ function fmtSec(t) {
   const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
   return (h ? `${h}:${String(m).padStart(2,'0')}` : `${m}`) + ':' + String(s).padStart(2,'0');
 }
+function youtubeId(d) {
+  const m = String((d && d.videoUrl) || '').match(/(?:[?&]v=|youtu\.be\/|\/shorts\/|\/embed\/|\/live\/)([\w-]{11})/);
+  return m ? m[1] : '';
+}
+let videoOpenFor = null;   // cvičení, jehož video se právě přehrává v aplikaci
+function toggleVideo(id) {
+  videoOpenFor = videoOpenFor === id ? null : id;
+  const wrap = document.getElementById('video-slot');
+  const d = (sheet && (drillById[id] || null)) || drillById[id];
+  if (wrap) wrap.outerHTML = videoButton(d || { id });
+  else renderSheet();
+}
 function videoButton(d) {
   const link = videoLink(d);
   if (!link) return '';
   const t = parseInt(d.videoStart, 10) || 0;
-  return `<a class="btn btn-video" href="${esc(link)}" target="_blank" rel="noopener">▶ Pustit video${t ? ` od ${fmtSec(t)}` : ''}</a>`;
+  const yt = youtubeId(d);
+  const from = t ? ` od ${fmtSec(t)}` : '';
+  const ext = `<a class="video-ext" href="${esc(link)}" target="_blank" rel="noopener">Otevřít v aplikaci YouTube ↗</a>`;
+  if (!yt) return `<div id="video-slot"><a class="btn btn-video" href="${esc(link)}" target="_blank" rel="noopener">▶ Pustit video${from}</a></div>`;
+  if (videoOpenFor !== d.id) {
+    return `<div id="video-slot"><button class="btn btn-video" onclick="toggleVideo('${jsId(d.id)}')">▶ Přehrát video${from}</button>${ext}</div>`;
+  }
+  const src = `https://www.youtube-nocookie.com/embed/${yt}?start=${t}&autoplay=1&playsinline=1&rel=0&modestbranding=1`;
+  return `<div id="video-slot">
+      <div class="video-frame" data-src="${esc(src)}"><iframe src="${esc(src)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
+      <div class="video-bar"><button class="btn btn-surface btn-sm" onclick="toggleVideo('${jsId(d.id)}')">✕ Zavřít video</button>${ext}</div>
+    </div>`;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1343,14 +1387,156 @@ let sheet = null;   // { mode: 'pick'|'item', blockId, view: 'list'|'detail', dr
 function showSheet() { document.getElementById('sheet').classList.add('show'); }
 function closeSheetNow() {
   sheet = null;
+  videoOpenFor = null;
   const el = document.getElementById('sheet');
   el.classList.remove('show');
   el.innerHTML = '';
 }
 function sheetBack() { history.back(); }
+// ═══════════════════════════════════════════════════════════════════════════
+// Fronta videí k rozboru
+// ═══════════════════════════════════════════════════════════════════════════
+const FROM_KEY = 'mobile_queue_from_v1';
+let queueState = { url: '', note: '', section: 'handball', msg: '', msgType: '', sending: false, list: null, listError: '' };
+
+function openQueueForm(prefillUrl, prefillNote) {
+  closeMenu();
+  queueState = { url: prefillUrl || '', note: prefillNote || '', section, msg: '', msgType: '', sending: false, list: null, listError: '' };
+  sheet = { mode: 'queue' };
+  history.pushState({ sheet: 1 }, '');
+  renderSheet();
+  showSheet();
+  loadQueueList();
+}
+
+async function loadQueueList() {
+  try {
+    const res = await fetch(`${QUEUE_URL}?fronta=1&key=${encodeURIComponent(QUEUE_KEY)}`, { cache: 'no-store' });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'chyba');
+    queueState.list = data.items || [];
+    queueState.listError = '';
+  } catch (e) {
+    queueState.listError = 'Seznam se nepodařilo načíst (jste online?)';
+  }
+  if (sheet && sheet.mode === 'queue') renderQueueList();
+}
+
+function extractLink(text) {
+  const m = String(text || '').match(/https?:\/\/\S+/);
+  return m ? m[0].replace(/[)\].,;]+$/, '') : '';
+}
+
+async function pasteQueueUrl() {
+  try {
+    const t = await navigator.clipboard.readText();
+    const link = extractLink(t) || t.trim();
+    document.getElementById('q-url').value = link;
+    queueState.url = link;
+  } catch (_) { toast('Vložte odkaz dlouhým podržením v políčku'); }
+}
+
+async function sendQueueItem() {
+  const url = extractLink(document.getElementById('q-url').value) || document.getElementById('q-url').value.trim();
+  const note = document.getElementById('q-note').value.trim();
+  const from = document.getElementById('q-from').value.trim();
+  const sec = document.getElementById('q-section').value;
+  lsSet(FROM_KEY, from);
+  queueState = { ...queueState, url, note, section: sec };
+  if (!/^https?:\/\//i.test(url)) { queueState.msg = 'Vložte odkaz na video (začíná https://).'; queueState.msgType = 'err'; renderQueueForm(); return; }
+  queueState.sending = true; queueState.msg = ''; renderQueueForm();
+  try {
+    const res = await fetch(QUEUE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'queue-add', key: QUEUE_KEY, url, note, section: sec, from })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      queueState = { ...queueState, url: '', note: '', msg: '✓ Video je ve frontě. Zpracuje se v PC aplikaci.', msgType: 'ok' };
+      loadQueueList();
+    } else if (data.duplicate === 'archive') {
+      queueState.msg = `Tohle video už v archivu je: „${data.title}“${data.presenter ? ' (' + data.presenter + ')' : ''}.`;
+      queueState.msgType = 'warn';
+    } else if (data.duplicate === 'queue') {
+      queueState.msg = 'Tohle video už ve frontě čeká.';
+      queueState.msgType = 'warn';
+    } else {
+      queueState.msg = data.error || 'Nepodařilo se odeslat.';
+      queueState.msgType = 'err';
+    }
+  } catch (e) {
+    queueState.msg = 'Nepodařilo se odeslat. Jste připojená k internetu?';
+    queueState.msgType = 'err';
+  }
+  queueState.sending = false;
+  renderQueueForm();
+}
+
+function renderQueueForm() {
+  const el = document.getElementById('sheet');
+  const q = queueState;
+  const from = lsGet(FROM_KEY) || '';
+  el.dataset.drill = '';
+  el.innerHTML = `
+    <div class="sheet-head">
+      <button class="icon-btn" onclick="sheetBack()" title="Zpět">←</button>
+      <div class="sheet-title">Poslat video k rozboru<small>Zpracuje se později v PC aplikaci</small></div>
+    </div>
+    <div class="sheet-body" id="sheet-body">
+      <div class="q-label">Odkaz na video (YouTube)</div>
+      <div style="display:flex;gap:6px">
+        <input id="q-url" class="q-input" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?v=…" value="${esc(q.url)}" />
+        <button class="btn btn-surface" onclick="pasteQueueUrl()">Vložit</button>
+      </div>
+      <div class="q-label">Sekce</div>
+      <select id="q-section" class="q-input">
+        <option value="handball" ${q.section !== 'school' ? 'selected' : ''}>🤾 Házená</option>
+        <option value="school" ${q.section === 'school' ? 'selected' : ''}>🎓 Škola</option>
+      </select>
+      <div class="q-label">Poznámka (nepovinné)</div>
+      <textarea id="q-note" class="q-input" rows="2" placeholder="např. od 12. minuty rychlý útok, zajímavá rozcvička">${esc(q.note)}</textarea>
+      <div class="q-label">Kdo posílá (nepovinné)</div>
+      <input id="q-from" class="q-input" placeholder="např. Jitka" value="${esc(from)}" />
+      ${q.msg ? `<div class="q-msg ${q.msgType}">${esc(q.msg)}</div>` : ''}
+      <button class="btn btn-blue" style="width:100%;justify-content:center;padding:13px;font-size:15px;margin-top:12px" ${q.sending ? 'disabled' : ''} onclick="sendQueueItem()">${q.sending ? 'Odesílám…' : '📨 Poslat do fronty'}</button>
+      <div class="section-h">Čeká na rozbor</div>
+      <div id="q-list"></div>
+      <div class="search-hint" style="margin-top:14px;font-size:12px">Tip pro Android: plánovač přidaný na plochu se objeví i v nabídce „Sdílet“ v aplikaci YouTube.</div>
+    </div>`;
+  renderQueueList();
+}
+
+function renderQueueList() {
+  const el = document.getElementById('q-list');
+  if (!el) return;
+  const q = queueState;
+  if (q.listError) { el.innerHTML = `<div class="search-hint">${esc(q.listError)}</div>`; return; }
+  if (!q.list) { el.innerHTML = `<div class="search-hint">Načítám…</div>`; return; }
+  if (!q.list.length) { el.innerHTML = `<div class="search-hint">Nic nečeká.</div>`; return; }
+  el.innerHTML = q.list.map(it => {
+    const d = new Date(it.addedAt);
+    const when = isNaN(d) ? '' : `${d.getDate()}. ${d.getMonth() + 1}.`;
+    return `<div class="q-item"><a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.url)}</a>
+      <div class="result-sub">${when}${it.section === 'school' ? ' · Škola' : ''}${it.from ? ' · ' + esc(it.from) : ''}${it.note ? ' · ' + esc(it.note) : ''}</div></div>`;
+  }).join('');
+}
+
+// Sdílení z jiné aplikace (Android): ?url=… nebo ?text=… s odkazem
+(function handleShareTarget() {
+  try {
+    const p = new URLSearchParams(location.search);
+    const link = extractLink(p.get('url') || '') || extractLink(p.get('text') || '') || extractLink(p.get('title') || '');
+    if (!link) return;
+    history.replaceState(null, '', location.pathname);
+    setTimeout(() => openQueueForm(link, ''), 300);
+  } catch (_) {}
+})();
+
 window.addEventListener('popstate', () => {
   if (!sheet) return;
   if (sheet.mode === 'pick' && sheet.view === 'detail') {
+    videoOpenFor = null;
     sheet.view = 'list';
     sheet.drillId = null;
     renderSheet();
@@ -1424,6 +1610,7 @@ function refreshSheet() {
 function renderSheet() {
   const el = document.getElementById('sheet');
   if (!sheet) return;
+  if (sheet.mode === 'queue') { renderQueueForm(); return; }
   const block = blocks.find(b => b.id === sheet.blockId);
   if (!block) { closeSheetNow(); return; }
 
@@ -1503,8 +1690,13 @@ function renderSheet() {
 
   const prev = document.getElementById('sheet-body');
   const keep = prev && el.dataset.drill === id ? prev.scrollTop : 0;
+  // Běžící video při překreslení nezastavit: přehrávač se přenese do nového obsahu
+  const oldFrame = el.dataset.drill === id ? el.querySelector('.video-frame') : null;
+  if (oldFrame) oldFrame.remove();
   el.dataset.drill = id;
   el.innerHTML = h;
+  const newFrame = el.querySelector('.video-frame');
+  if (oldFrame && newFrame && oldFrame.dataset.src === newFrame.dataset.src) newFrame.replaceWith(oldFrame);
   const body = document.getElementById('sheet-body');
   if (body && keep) body.scrollTop = keep;
 }
@@ -1528,6 +1720,7 @@ function facetLine(d) {
   const parts = [];
   facetVals(d, 'part').forEach(v => parts.push(`<span class="fchip part">${esc(facetLbl('part', v, true))}</span>`));
   facetVals(d, 'topics').forEach(v => parts.push(`<span class="fchip">${esc(facetLbl('topics', v, true))}</span>`));
+  facetVals(d, 'posts').forEach(v => parts.push(`<span class="fchip post">${esc(facetLbl('posts', v, true))}</span>`));
   facetVals(d, 'form').forEach(v => parts.push(`<span class="fchip form">${esc(facetLbl('form', v, true))}</span>`));
   facetVals(d, 'u13').forEach(v => { if (v !== 'yes') parts.push(`<span class="fchip u13">U13: ${esc(facetLbl('u13', v))}</span>`); });
   return parts.length ? `<div class="fchips">${parts.join('')}</div>` : '';
@@ -1565,7 +1758,7 @@ function renderPickParts() {
   if (moreFilters) {
     c += `<div class="more-filters">`;
     if (facetsOn) {
-      ['topics', 'form', 'zone', 'u13'].forEach(k => {
+      ['topics', 'posts', 'form', 'zone', 'u13'].forEach(k => {
         const def = facetDefOf(k); if (!def) return;
         c += `<div class="mf-label">${esc(def.label)}</div><div class="chips" style="margin-top:0">`;
         def.options.forEach(o => {
