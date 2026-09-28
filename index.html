@@ -685,11 +685,22 @@ function lsSet(k, v) {
   loadMarks();
   loadLibrary();
   updateSectionTabs();
+  const show = () => {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+    document.getElementById('fab-area').style.display = 'flex';
+    render();
+  };
+  // Hned ukázat naposledy stažená cvičení, nová se donačtou na pozadí
+  let cached = null;
+  try { cached = JSON.parse(lsGet(CACHE_KEY) || 'null'); } catch (_) {}
+  if (cached && Array.isArray(cached.drills) && cached.drills.length) {
+    setDrills(cached, true);
+    document.getElementById('header-sub').textContent += ' · aktualizuji…';
+    show();
+  }
   await loadDrills();
-  document.getElementById('loading').style.display = 'none';
-  document.getElementById('content').style.display = 'block';
-  document.getElementById('fab-area').style.display = 'flex';
-  render();
+  show();
 })();
 
 async function loadDrills() {
