@@ -3236,13 +3236,14 @@ function tplById(id) { return rules.templates.find(t => t.id === id) || rules.te
 
 // ── Téma: pozná se i z ručně psaného zaměření („rychlý útok“ → Rychlý útok) ──
 function topicOptions() { const d = facetDefOf('topics'); return d ? d.options : []; }
-function themeFromText(txt) {
+function themesFromText(txt) {
   const n = normalize(txt);
-  if (!n) return '';
-  const o = topicOptions().find(o => [o.label, o.short].filter(Boolean)
-    .some(l => { const k = normalize(l).replace(/\s*\(.*\)\s*$/, ''); return k && n.includes(k); }));
-  return o ? o.id : '';
+  if (!n) return [];
+  return topicOptions().filter(o => [o.label, o.short].filter(Boolean)
+    .some(l => { const k = normalize(l).replace(/\s*\(.*\)\s*$/, ''); return k && n.includes(k); }))
+    .map(o => o.id);
 }
+function themeFromText(txt) { return themesFromText(txt)[0] || ''; }
 function lastTheme(beforeDate) {
   const list = allPlans().filter(p => p.date && p.date < beforeDate && p.id !== meta.libId)
     .sort((a, b) => (b.date + (b.time || '')).localeCompare(a.date + (a.time || '')));
@@ -3261,8 +3262,9 @@ function fitsRules(d, players) {
   return true;
 }
 function resolveTopics(spec, ctx) {
-  if (spec.topic === 'theme') return ctx.theme ? [ctx.theme] : [];
-  if (spec.topic === 'last') return ctx.lastTheme ? [ctx.lastTheme] : (ctx.theme ? [ctx.theme] : []);
+  const th = Array.isArray(ctx.themes) ? ctx.themes : (ctx.theme ? [ctx.theme] : []);
+  if (spec.topic === 'theme') return th;
+  if (spec.topic === 'last') return ctx.lastTheme ? [ctx.lastTheme] : th;
   if (spec.topic === 'fixed') return spec.topics || [];
   return [];
 }
@@ -3324,7 +3326,8 @@ function generateTraining(o) {
   const tpl = tplById(o.tpl);
   if (!tpl) return;
   const sum = tpl.blocks.reduce((s, b) => s + (Number(b.minutes) || 0), 0) || 1;
-  const ctx = { theme: o.theme, lastTheme: o.lastTheme, players: o.players, date: meta.date || todayStr(), used: new Set() };
+  const themes = Array.isArray(o.themes) ? o.themes : (o.theme ? [o.theme] : []);
+  const ctx = { themes, lastTheme: o.lastTheme, players: o.players, date: meta.date || todayStr(), used: new Set() };
   const nb = tpl.blocks.map(spec => ({
     id: uid(), name: spec.name,
     plannedMinutes: Math.max(5, Math.round((Number(spec.minutes) || 0) * o.minutes / sum)),
@@ -3336,8 +3339,10 @@ function generateTraining(o) {
     .forEach(b => { b.items = fillBlock(b.gen, b.plannedMinutes, b.gen.topics, ctx); });
   blocks = nb;
   const usesLast = tpl.blocks.some(b => b.topic === 'last');
-  const themeId = usesLast && !tpl.blocks.some(b => b.topic === 'theme') ? (o.lastTheme || o.theme) : o.theme;
-  if (themeId) meta.focus = facetLbl('topics', themeId);
+  const themeIds = usesLast && !tpl.blocks.some(b => b.topic === 'theme')
+    ? (o.lastTheme ? [o.lastTheme] : themes)
+    : themes;
+  if (themeIds.length) meta.focus = themeIds.map(id => facetLbl('topics', id)).join(', ');
   meta.target = o.minutes;
   meta.dirty = true;
   saveMeta();
@@ -3350,9 +3355,9 @@ function generateTraining(o) {
 function blockSpec(b) {
   if (b.gen) return b.gen;
   const part = guessPart(b.name);
-  const theme = themeFromText(meta.focus);
-  const useTheme = theme && part !== 'warmup' && part !== 'fitness';
-  return { parts: part ? [part] : PART_ORDER.slice(), topic: useTheme ? 'theme' : 'any', topics: useTheme ? [theme] : [], prog: part === 'main' };
+  const themes = themesFromText(meta.focus);
+  const useTheme = themes.length && part !== 'warmup' && part !== 'fitness';
+  return { parts: part ? [part] : PART_ORDER.slice(), topic: useTheme ? 'theme' : 'any', topics: useTheme ? themes : [], prog: part === 'main' };
 }
 function regenBlock(id) {
   const b = blocks.find(x => x.id === id);
@@ -3416,7 +3421,7 @@ function trainingChecks() {
   const total = blocks.reduce((s, b) => s + blockDuration(b), 0);
   if (meta.target && Math.abs(total - meta.target) > 5) out.push(`Trénink má ${total} min, plánováno je ${meta.target} min.`);
   if (!all.some(i => facetVals(i.drill, 'part').includes('game'))) out.push('Chybí herní forma (malá hra). Podle metodiky patří na konec tréninku.');
-  const theme = themeFromText(meta.focus);
+  const themes = themesFromText(meta.focus);
   blocks.forEach(b => {
     if (!b.items.length) { out.push(`Blok „${b.name}“ je prázdný.`); return; }
     if (b.gen && b.plannedMinutes - blockDuration(b) > 5) out.push(`Blok „${b.name}“: chybí ${b.plannedMinutes - blockDuration(b)} min, v archivu není dost vhodných cvičení.`);
@@ -3424,9 +3429,9 @@ function trainingChecks() {
       const keys = b.items.map(i => progKey(i.drill));
       if (keys.some((k, i) => i && k < keys[i - 1])) out.push(`Blok „${b.name}“ nejde od jednoduchého ke hře. Zkuste ✨ nebo přeřaďte cvičení.`);
     }
-    if (theme && b.gen && (b.gen.topic === 'theme' || b.gen.topic === 'last')) {
-      const off = b.items.filter(i => !facetVals(i.drill, 'topics').includes(theme)).length;
-      if (off) out.push(`Blok „${b.name}“: ${off}× cvičení mimo téma ${facetLbl('topics', theme)}.`);
+    if (themes.length && b.gen && (b.gen.topic === 'theme' || b.gen.topic === 'last')) {
+      const off = b.items.filter(i => !facetVals(i.drill, 'topics').some(t => themes.includes(t))).length;
+      if (off) out.push(`Blok „${b.name}“: ${off}× cvičení mimo téma ${themes.map(t => facetLbl('topics', t)).join(', ')}.`);
     }
   });
   const young = !['U15', 'U17', 'Dospělí'].includes(rules.category);
@@ -3451,11 +3456,12 @@ function openGen() {
   const day = (rules.days || []).find(x => x.dow === dowOf(date));
   const tpl = tplById(day && day.tpl);
   const last = lastTheme(date);
+  const focusThemes = themesFromText(meta.focus);
   genForm = {
     tpl: tpl ? tpl.id : '',
     minutes: Number(meta.target) || (day && day.minutes) || 90,
-    // Bez zadaného zaměření pokračuje téma týdne z minulého tréninku (dá se změnit)
-    theme: themeFromText(meta.focus) || last,
+    // Bez zadaného zaměření pokračuje téma týdne z minulého tréninku (dá se změnit, lze vybrat i více)
+    themes: focusThemes.length ? focusThemes : (last ? [last] : []),
     lastTheme: last,
     players: rules.players || 12,
     dayHint: day && tpl ? `${DOW[day.dow]}: podle nastavení „${tpl.name}“` : ''
@@ -3466,6 +3472,12 @@ function openGen() {
   showSheet();
 }
 function setGen(k, v) { genForm[k] = v; renderGen(); }
+function toggleGenTheme(id) {
+  const arr = genForm.themes || (genForm.themes = []);
+  const i = arr.indexOf(id);
+  if (i >= 0) arr.splice(i, 1); else arr.push(id);
+  renderGen();
+}
 function renderGen() {
   const el = document.getElementById('sheet');
   const f = genForm;
@@ -3493,7 +3505,8 @@ function renderGen() {
       </div>
       <div class="set-sec"><h3>Téma tréninku</h3>
         ${usesLast ? `<div class="hint">Hlavní část převezme téma minulého tréninku: <b>${f.lastTheme ? esc(facetLbl('topics', f.lastTheme)) : 'žádné nenalezeno, použije se téma níže'}</b></div>` : ''}
-        <div class="chips" style="margin-top:0">${chipH('Bez tématu', !f.theme, `setGen('theme','')`)}${topicOptions().map(o => chipH(o.short || o.label, f.theme === o.id, `setGen('theme','${o.id}')`)).join('')}</div>
+        <div class="hint">Můžete vybrat i více témat najednou (např. přihrávky a kondice).</div>
+        <div class="chips" style="margin-top:0">${chipH('Bez tématu', !(f.themes && f.themes.length), `setGen('themes',[])`)}${topicOptions().map(o => chipH(o.short || o.label, (f.themes || []).includes(o.id), `toggleGenTheme('${o.id}')`)).join('')}</div>
       </div>
       <div class="hint" style="font-size:12px;color:var(--text2);margin:0 2px 12px">Kategorie ${esc(rules.category)} · ${missing.length ? 'bez pomůcek: ' + esc(missing.join(', ')) : 'všechny pomůcky'} ·
         <span style="color:#93c5fd;text-decoration:underline;cursor:pointer" onclick="openSettings(true)">upravit pravidla</span></div>
