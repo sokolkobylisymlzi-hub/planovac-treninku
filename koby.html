@@ -664,6 +664,59 @@
     .stat-line div { flex: 1; background: var(--surface); border-radius: 12px; padding: 10px; text-align: center; }
     .stat-line b { display: block; font-size: 22px; }
     .stat-line span { font-size: 11px; color: var(--text2); }
+
+    /* ── Generátor, nastavení pravidel, tisk ─────────────────── */
+    .training-actions { display: flex; gap: 6px; margin-top: 8px; }
+    .training-actions .btn { flex: 1; justify-content: center; padding: 9px 8px; font-size: 13px; }
+    .check-box { background: #2a1d05; border: 1px solid #92400e; border-radius: 12px; padding: 10px 12px; margin-bottom: 12px; font-size: 13px; color: #fde68a; }
+    .check-box b { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #fbbf24; margin-bottom: 4px; }
+    .check-box ul { padding-left: 18px; }
+    .check-box.ok { background: #052e1f; border-color: #047857; color: #a7f3d0; }
+    .drill-row .swap-btn { background: none; border: 1px solid var(--border); color: var(--text2); border-radius: 8px; width: 32px; height: 32px; font-size: 15px; flex-shrink: 0; cursor: pointer; }
+    .set-sec { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 12px; }
+    .set-sec h3 { font-size: 14px; margin-bottom: 4px; }
+    .set-sec .hint { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
+    .set-sec input, .set-sec select { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 16px; padding: 7px 9px; font-family: inherit; color-scheme: dark; }
+    .set-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+    .set-row .grow { flex: 1; min-width: 0; }
+    .set-check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; padding: 7px 0; border-top: 1px solid var(--border); }
+    .set-check:first-of-type { border-top: none; }
+    .set-check input { width: 20px; height: 20px; margin-top: 1px; flex-shrink: 0; }
+    .set-check small { display: block; font-size: 12px; color: var(--text2); }
+    .tpl { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; }
+    .tpl-head { display: flex; align-items: center; gap: 8px; padding: 10px; cursor: pointer; }
+    .tpl-head b { flex: 1; }
+    .tpl-head span { font-size: 12px; color: var(--text2); }
+    .tpl-body { padding: 0 10px 10px; }
+    .tb { border: 1px solid var(--border); border-radius: 10px; padding: 8px; margin-bottom: 8px; background: #0b1222; }
+    .tb-lbl { font-size: 11px; color: var(--text2); margin: 6px 0 2px; }
+    .tb .chips { margin-top: 0; }
+    .gen-preview { white-space: pre-wrap; font-size: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px; color: var(--text2); max-height: 220px; overflow-y: auto; }
+    .exp-btn { width: 100%; justify-content: flex-start; padding: 13px 14px; font-size: 15px; margin-bottom: 8px; text-align: left; }
+    .exp-btn small { display: block; font-size: 12px; font-weight: 400; color: var(--text2); }
+    #print-area { display: none; }
+    @media print {
+      @page { size: A4; margin: 12mm; }
+      html, body { background: #fff !important; color: #000 !important; height: auto !important; overflow: visible !important; }
+      body > *:not(#print-area) { display: none !important; }
+      #print-area { display: block !important; font-family: Arial, Helvetica, sans-serif; font-size: 10.5pt; line-height: 1.35; color: #000; }
+      #print-area h1 { font-size: 16pt; margin: 0 0 2px; }
+      #print-area .pr-sub { font-size: 10pt; color: #333; margin-bottom: 6px; }
+      #print-area .pr-eq { font-size: 9.5pt; margin-bottom: 8px; }
+      #print-area table { width: 100%; border-collapse: collapse; }
+      #print-area th, #print-area td { border: 1px solid #999; padding: 3px 5px; vertical-align: top; text-align: left; }
+      #print-area th { background: #eee; font-size: 9pt; }
+      #print-area tr.pr-block td { background: #ddd; font-weight: bold; }
+      #print-area td.pr-min, #print-area td.pr-time { white-space: nowrap; width: 1%; }
+      #print-area h2 { font-size: 12.5pt; margin: 12px 0 4px; padding: 3px 6px; background: #ddd; break-after: avoid; page-break-after: avoid; }
+      #print-area .pr-drill { margin: 6px 0 10px; }
+      #print-area h3 { font-size: 11.5pt; margin: 0 0 2px; break-after: avoid; page-break-after: avoid; }
+      #print-area li { break-inside: avoid; }
+      #print-area .pr-lbl { font-weight: bold; font-size: 9pt; text-transform: uppercase; margin-top: 3px; }
+      #print-area ul, #print-area ol { margin: 0; padding-left: 18px; }
+      #print-area .pr-meta { font-size: 9pt; color: #444; margin-top: 2px; }
+      #print-area .pr-note { font-style: italic; }
+    }
   </style>
 </head>
 <body>
@@ -711,12 +764,14 @@
       <small>Rozpracovaný trénink se předtím sám uloží</small></button>
     <button class="menu-item" onclick="openLibrary()">📚 Uložené tréninky (mobil + Disk)
       <small id="lib-count"></small></button>
+    <button class="menu-item" onclick="closeMenu();openExport()">🖨️ Tisk a export (XPS)
+      <small>Vytisknout trénink, zkopírovat text pro XPS nebo ho poslat</small></button>
+    <button class="menu-item" onclick="closeMenu();openSettings()">⚙️ Nastavení tréninků
+      <small>Kategorie, tréninkové dny, pomůcky a pravidla pro generování</small></button>
     <h3 style="margin-top:14px">Moje data v tomto telefonu</h3>
     <div class="menu-sub" id="menu-info"></div>
-    <button class="menu-item" onclick="sharePlanText()">📤 Sdílet plán jako text
-      <small>Pošlete trénink třeba přes WhatsApp nebo e-mail</small></button>
     <button class="menu-item" onclick="backupMyData()">💾 Zálohovat moje data
-      <small>Uložené tréninky, oblíbené, skrytá cvičení, štítky a poznámky do souboru</small></button>
+      <small>Uložené tréninky, nastavení, oblíbené, skrytá cvičení, štítky a poznámky do souboru</small></button>
     <button class="menu-item" onclick="document.getElementById('restore-file').click()">📥 Obnovit ze zálohy
       <small>Načte soubor zálohy (i do nového telefonu)</small></button>
     <button class="menu-item" onclick="openQueueForm()">🎬 Poslat video k rozboru
@@ -729,6 +784,7 @@
 </div>
 <div id="sheet"></div>
 <div id="toast"></div>
+<div id="print-area"></div>
 
 <script>
 // ═══════════════════════════════════════════════════════════════════════════
@@ -795,6 +851,7 @@ setTimeout(async function init() {
   loadPlanFromStorage();
   loadMarks();
   loadLibrary();
+  loadRules();
   updateSectionTabs();
   const show = () => {
     document.getElementById('loading').style.display = 'none';
@@ -1276,6 +1333,10 @@ function trainingBar() {
       </div>
       <input class="training-focus" value="${esc(meta.focus || '')}" placeholder="Zaměření (např. rychlý útok, obrana 6:0)…"
         oninput="updateMeta('focus', this.value)" />
+      <div class="training-actions">
+        <button class="btn btn-surface" onclick="openGen()">✨ Vygenerovat</button>
+        <button class="btn btn-surface" onclick="openExport()">🖨️ Tisk / XPS</button>
+      </div>
     </div>`;
 }
 
@@ -1433,7 +1494,7 @@ function normalize(t) {
   return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 }
 
-const EMPTY_FILTER = () => ({ fav: false, tag: null, part: '', topics: [], posts: [], form: [], zone: [], u13: [] });
+const EMPTY_FILTER = () => ({ fav: false, tag: null, part: '', topics: [], posts: [], form: [], zone: [], u13: [], dur: [], players: 0, noEquip: [] });
 const ARCH = '__arch';
 function getBlk(id) {
   if (id === ARCH) return { id: ARCH, name: 'Archiv cvičení', plannedMinutes: 0, items: blocks.flatMap(b => b.items) };
@@ -1452,7 +1513,47 @@ function toggleFilterFacet(blockId, key, id) {
 function clearFilters(blockId) { filterState[blockId] = { ...EMPTY_FILTER(), part: filterOf(blockId).part }; render(); }
 function toggleMoreFilters() { moreFilters = !moreFilters; render(); }
 function extraFilterCount(f) {
-  return (f.fav ? 1 : 0) + (f.tag ? 1 : 0) + ['topics','posts','form','zone','u13'].reduce((n, k) => n + (f[k] || []).length, 0);
+  return (f.fav ? 1 : 0) + (f.tag ? 1 : 0) + (f.players ? 1 : 0) + ['topics','posts','form','zone','u13','dur','noEquip'].reduce((n, k) => n + (f[k] || []).length, 0);
+}
+// Výchozí filtr výběru: pomůcky, které trenér v Nastavení označil jako „nemáme“, rovnou vyřadit
+function startFilter(part) { return { ...EMPTY_FILTER(), part: part || '', noEquip: [...(rules.missingEquip || [])] }; }
+
+// ── Délka, počet hráčů a pomůcky: v archivu jsou to volné texty, sjednotí se do skupin ──
+const DUR_OPTS = [
+  { id: 'd5',  label: 'do 5 min',   min: 0,  max: 5 },
+  { id: 'd10', label: '6–10 min',   min: 6,  max: 10 },
+  { id: 'd15', label: '11–15 min',  min: 11, max: 15 },
+  { id: 'd16', label: 'nad 15 min', min: 16, max: 999 }
+];
+const PLAYER_OPTS = [4, 6, 8, 10, 12, 14, 16];
+const EQUIP_GROUPS = [
+  { id: 'cones',     label: 'Kužely, mety',        re: /kuzel|\bmet(y|a|ove)?\b|konick/ },
+  { id: 'goal',      label: 'Branka',              re: /\bbrank(a|y)\b/ },
+  { id: 'bibs',      label: 'Rozlišováky',         re: /rozlis|vest|dres/ },
+  { id: 'figures',   label: 'Figuríny',            re: /figur|maneky|panac/ },
+  { id: 'obstacles', label: 'Překážky, step boxy', re: /prekaz|step|slalom|tyc/ },
+  { id: 'mats',      label: 'Žíněnky, podložky',   re: /zinen|podloz/ },
+  { id: 'strength',  label: 'Gumy, medicinbaly',   re: /\bgum|medicin/ },
+  { id: 'balls',     label: 'Míče',                re: /\bmic(e|u|i)?\b/ }
+];
+function drillEquipGroups(d) {
+  if (!d._eq) {
+    const txt = (d.equipment || []).map(normalize);
+    d._eq = EQUIP_GROUPS.filter(g => txt.some(t => g.re.test(t))).map(g => g.id);
+  }
+  return d._eq;
+}
+// Nejmenší počet hráčů, se kterým cvičení jde („8-12 hráčů“ → 8, „celý tým“ → bez omezení)
+function drillMinPlayers(d) {
+  const s = normalize(d.playerCount);
+  const m = s.match(/\d+/);
+  if (m) return +m[0];
+  if (/dvojic/.test(s) && !/tym/.test(s)) return 2;
+  return 0;
+}
+function durOk(d, ids) {
+  const min = Number(d.durationMinutes) || 10;
+  return DUR_OPTS.some(o => ids.includes(o.id) && min >= o.min && min <= o.max);
 }
 
 function facetDefOf(key) { return facetDefs.find(d => d.key === key); }
@@ -1518,6 +1619,9 @@ function searchDrills(query, block) {
       // „Všechny posty“ se hodí pro kterýkoli post
       if (want.length && !want.some(w => has.includes(w) || (k === 'posts' && has.includes('all')))) return false;
     }
+    if ((f.dur || []).length && !durOk(d, f.dur)) return false;
+    if (f.players && drillMinPlayers(d) > f.players) return false;
+    if ((f.noEquip || []).length && drillEquipGroups(d).some(g => f.noEquip.includes(g))) return false;
     return true;
   });
 
@@ -1599,7 +1703,8 @@ function renderTraining(content) {
       <div class="empty-state">
         <div class="icon">📋</div>
         <h2>Zatím žádný blok</h2>
-        <p>Stiskněte + Přidat blok a začněte skládat trénink.</p>
+        <p style="margin:6px 0 12px"><button class="btn btn-blue" style="padding:12px 18px;font-size:15px" onclick="openGen()">✨ Vygenerovat trénink</button></p>
+        <p>Nebo stiskněte + Přidat blok a skládejte ručně.</p>
         ${library.length ? `<p style="margin-top:14px"><button class="btn btn-surface" onclick="openLibrary()">📚 Otevřít uložený trénink (${library.length})</button></p>` : ''}
       </div>`;
     return;
@@ -1615,7 +1720,7 @@ function renderTraining(content) {
       <div class="summary-stat"><div class="summary-num">${total}</div><div class="summary-lbl">${meta.target ? `z ${meta.target} plánovaných` : 'minut'}</div></div>
       <div class="summary-stat"><div class="summary-num">${blocks.length}</div><div class="summary-lbl">bloků</div></div>
       <div class="summary-stat"><div class="summary-num">${allItems.length}</div><div class="summary-lbl">cvičení</div></div>
-    </div>${equipBox()}`;
+    </div>${checkBox()}${equipBox()}`;
 
   const fmt = m => `${Math.floor(m/60)}:${String(m%60).padStart(2,'0')}`;
 
@@ -1640,6 +1745,7 @@ function renderTraining(content) {
 
     html += `</div>
         <div class="block-actions">
+          <button class="icon-btn" onclick="regenBlock('${block.id}')" title="Vygenerovat obsah bloku">✨</button>
           <button class="icon-btn" onclick="moveBlock('${block.id}', -1)" ${bi===0?'disabled':''} title="Nahoru">↑</button>
           <button class="icon-btn" onclick="moveBlock('${block.id}', 1)"  ${bi===blocks.length-1?'disabled':''} title="Dolů">↓</button>
           <button class="icon-btn del" onclick="removeBlock('${block.id}')" title="Smazat">✕</button>
@@ -1664,7 +1770,7 @@ function renderTraining(content) {
             ${note ? `<div class="drill-item-sub" style="color:#fbbf24">📝 ${esc(note)}</div>` : ''}
           </div>
           <div class="drill-row-min">${item.duration}<small>min</small></div>
-          <span class="chev">›</span>
+          <button class="swap-btn" onclick="event.stopPropagation();swapDrill('${block.id}','${jsId(id)}')" title="Vyměnit za jiné vhodné cvičení">↻</button>
         </div>`;
     });
 
@@ -2188,7 +2294,7 @@ window.addEventListener('popstate', () => {
 function openPicker(blockId) {
   if (!filterState[blockId]) {
     const b = blocks.find(x => x.id === blockId);
-    filterState[blockId] = { ...EMPTY_FILTER(), part: b ? guessPart(b.name) : '' };
+    filterState[blockId] = startFilter(b ? guessPart(b.name) : '');
   }
   sheet = { mode: 'pick', blockId, view: 'list', drillId: null, scroll: 0 };
   history.pushState({ sheet: 1 }, '');
@@ -2259,6 +2365,9 @@ function renderSheet() {
   const el = document.getElementById('sheet');
   if (!sheet) return;
   if (sheet.mode === 'queue') { renderQueueForm(); return; }
+  if (sheet.mode === 'settings') { renderSettings(); return; }
+  if (sheet.mode === 'gen') { renderGen(); return; }
+  if (sheet.mode === 'export') { renderExport(); return; }
   const block = sheet.blockId ? getBlk(sheet.blockId) : null;
   if (sheet.mode !== 'shared' && !block) { closeSheetNow(); return; }
 
@@ -2317,6 +2426,7 @@ function renderSheet() {
           <span style="flex:1"></span>
           <button class="icon-btn" onclick="moveDrill('${block.id}','${jsId(id)}',-1)" ${idx===0?'disabled':''} title="Posunout výš">↑</button>
           <button class="icon-btn" onclick="moveDrill('${block.id}','${jsId(id)}',1)" ${idx===block.items.length-1?'disabled':''} title="Posunout níž">↓</button>
+          <button class="btn btn-surface btn-sm" onclick="swapDrill('${block.id}','${jsId(id)}', true)">↻ Vyměnit</button>
           <button class="btn btn-red btn-sm" onclick="removeFromDetail()">Odebrat</button>
         </div>
         <textarea class="drill-note" placeholder="Poznámka k tomuto tréninku…"
@@ -2423,6 +2533,19 @@ function renderPickParts() {
         c += `</div>`;
       });
     }
+    c += `<div class="mf-label">Délka cvičení</div><div class="chips" style="margin-top:0">`;
+    DUR_OPTS.forEach(o => {
+      c += `<span class="chip filter ${(f.dur || []).includes(o.id) ? 'on' : ''}" onclick="toggleFilterFacet('${block.id}','dur','${o.id}')">${o.label}</span>`;
+    });
+    c += `</div><div class="mf-label">Kolik mám hráčů (cvičení, které jich potřebuje víc, se skryje)</div><div class="chips" style="margin-top:0">`;
+    PLAYER_OPTS.forEach(n => {
+      c += `<span class="chip filter ${f.players === n ? 'on' : ''}" onclick="setFilter('${block.id}',{players:${f.players === n ? 0 : n}})">${n === 16 ? '16+' : n}</span>`;
+    });
+    c += `</div><div class="mf-label">Tuhle pomůcku nemám (cvičení s ní se skryjí)</div><div class="chips" style="margin-top:0">`;
+    EQUIP_GROUPS.forEach(g => {
+      c += `<span class="chip filter ${(f.noEquip || []).includes(g.id) ? 'on' : ''}" onclick="toggleFilterFacet('${block.id}','noEquip','${g.id}')">${(f.noEquip || []).includes(g.id) ? '🚫 ' : ''}${g.label}</span>`;
+    });
+    c += `</div>`;
     if (myTags.length) {
       c += `<div class="mf-label">Moje štítky</div><div class="chips" style="margin-top:0">`;
       myTags.forEach(t => {
@@ -2542,7 +2665,7 @@ async function sharePlanText() {
 
 async function backupMyData() {
   closeMenu();
-  const payload = { app: 'planovac-treninku', version: 2, savedAt: Date.now(), marks, plan: blocks, meta, library, section };
+  const payload = { app: 'planovac-treninku', version: 2, savedAt: Date.now(), marks, plan: blocks, meta, library, section, rules };
   const json = JSON.stringify(payload);
   const name = `planovac-zaloha-${new Date().toISOString().slice(0,10)}.json`;
   try {
@@ -2591,6 +2714,10 @@ function restoreMyData(input) {
         else if ((t.savedAt || 0) > (library[i].savedAt || 0)) library[i] = t;
       });
       saveLibrary();
+      if (data.rules && typeof data.rules === 'object' && confirm('Záloha obsahuje i Nastavení tréninků (dny, kategorie, pravidla). Použít je?')) {
+        rules = mergeRules(data.rules);
+        saveRules();
+      }
       if (replacePlan && Array.isArray(data.plan)) {
         blocks = data.plan;
         refreshDrills(blocks);
@@ -2758,7 +2885,9 @@ function lastPlanDefaults() {
 }
 function openPlanForm() {
   const d = lastPlanDefaults();
-  planForm = { mode: 'new', date: calSel, time: d.time, target: d.target, focus: '', name: '', repeat: '', until: '' };
+  // Když má trenér v Nastavení tento den jako tréninkový, vezme se čas a délka odtud
+  const day = (rules.days || []).find(x => x.dow === dowOf(calSel));
+  planForm = { mode: 'new', date: calSel, time: (day && day.time) || d.time, target: (day && day.minutes) || d.target, focus: '', name: '', repeat: '', until: '' };
   render();
 }
 function movePlanForm(id) {
@@ -2884,8 +3013,12 @@ function openFromPlan(id, where, toHala) {
 function equipList(bl) {
   const seen = new Map();
   bl.forEach(b => (b.items || []).forEach(it => (it.drill.equipment || []).forEach(e => {
-    const k = normalize(String(e).trim()).replace(/y$|e$|i$/, '');
-    if (k && !seen.has(k)) seen.set(k, String(e).trim());
+    const n = normalize(String(e).trim());
+    if (/^(zadn|bez pomuc)|brankar/.test(n)) return; // „žádné“ ani brankář nejsou pomůcky
+    // Stejné pomůcky psané různě („míč“, „Házenkářské míče (1 na hráče)“) sloučit pod jeden název
+    const g = EQUIP_GROUPS.find(x => x.re.test(n));
+    const k = g ? g.id : n.replace(/y$|e$|i$/, '');
+    if (k && !seen.has(k)) seen.set(k, g ? g.label : String(e).trim());
   })));
   return [...seen.values()];
 }
@@ -2989,7 +3122,7 @@ function renderArchiv() {
   return h;
 }
 function openArchive(part) {
-  filterState[ARCH] = { ...EMPTY_FILTER(), part: part || '' };
+  filterState[ARCH] = startFilter(part);
   sheet = { mode: 'pick', blockId: ARCH, view: 'list', drillId: null, scroll: 0 };
   history.pushState({ sheet: 1 }, '');
   renderSheet();
@@ -3019,6 +3152,632 @@ function addFromArchive(drillId) {
   savePlan();
   render();
   toast(`✓ Přidáno do „${b.name}“`);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Nastavení tréninků a generátor
+// Pravidla si nastaví každý trenér sám (kategorie, dny, typy tréninku).
+// Výchozí hodnoty vycházejí z metodiky U13 (norský a dánský přístup):
+// rozcvička → nová látka od jednoduchého ke hře → herní forma na konci.
+// Generátor jen vybírá z archivu podle pravidel, nic si nevymýšlí.
+// ═══════════════════════════════════════════════════════════════════════════
+const RULES_KEY = 'koby_rules_v1';
+const CATS = [
+  { id: 'U9',      fit: ['yes'] },
+  { id: 'U11',     fit: ['yes'] },
+  { id: 'U13',     fit: ['yes', 'adapt'] },
+  { id: 'U15',     fit: ['yes', 'adapt', 'older'] },
+  { id: 'U17',     fit: ['yes', 'adapt', 'older'] },
+  { id: 'Dospělí', fit: ['yes', 'adapt', 'older'] }
+];
+const TOPIC_MODES = [
+  { id: 'theme', label: 'Téma tréninku' },
+  { id: 'last',  label: 'Téma minulého tréninku' },
+  { id: 'any',   label: 'Libovolné' },
+  { id: 'fixed', label: 'Vybraná témata' }
+];
+const DOW_SHORT = ['Ne', 'Po', 'Út', 'St', 'Čt', 'Pá', 'So'];
+const FORM_RANK = { individual: 0, pairs: 1, small: 2, team: 3 };
+const PART_RANK = { warmup: 0, technique: 1, fitness: 1, main: 2, game: 3, cooldown: 4 };
+// Fáze nácviku: izolovaně → s odporem v malých skupinách → herní forma
+const STAGES = [
+  { share: 0.35, ok: d => ['individual', 'pairs'].includes(facetVals(d, 'form')[0]) },
+  { share: 0.35, ok: d => facetVals(d, 'form')[0] === 'small' },
+  { share: 0.30, ok: d => facetVals(d, 'form')[0] === 'team' || facetVals(d, 'part').includes('game') }
+];
+
+function tb(name, minutes, parts, topic, topics, prog, forms) { return { name, minutes, parts, topic, topics: topics || [], prog: !!prog, forms: forms || [] }; }
+function defaultTemplates() {
+  return [
+    { id: 'new', name: 'Nová látka + hra', blocks: [
+      tb('Rozcvička', 30, ['warmup'], 'any'),
+      tb('Hlavní část – nácvik', 50, ['technique', 'main'], 'theme', [], true),
+      tb('Hry', 10, ['game'], 'theme')
+    ] },
+    { id: 'versatile', name: 'Všestrannost a technika', blocks: [
+      tb('Rozcvička', 15, ['warmup'], 'any'),
+      tb('Stanoviště – obratnost a kondice', 20, ['fitness', 'warmup', 'technique'], 'fixed', ['coordination']),
+      tb('Stanoviště – míčová technika', 20, ['technique'], 'fixed', ['passing', '1v1']),
+      tb('Hlavní část', 25, ['technique', 'main'], 'theme', [], true),
+      tb('Závěr', 10, ['game', 'cooldown'], 'any')
+    ] },
+    { id: 'repeat', name: 'Opakování ve hře', blocks: [
+      tb('Rozcvička – rychlý útok', 20, ['warmup', 'technique', 'main'], 'fixed', ['fastbreak']),
+      tb('Hlavní část – téma v herní variantě', 45, ['main', 'game'], 'last', [], true, ['small', 'team']),
+      tb('Závěr – hra', 25, ['game'], 'any')
+    ] }
+  ];
+}
+function defaultRules() {
+  return {
+    category: 'U13', fit: ['yes', 'adapt'], players: 12, missingEquip: [],
+    preferFav: true, preferUnused: true, checks: true,
+    days: [
+      { dow: 2, time: '17:00', minutes: 90, tpl: 'new' },
+      { dow: 3, time: '17:00', minutes: 90, tpl: 'versatile' },
+      { dow: 4, time: '17:00', minutes: 90, tpl: 'repeat' }
+    ],
+    templates: defaultTemplates()
+  };
+}
+function mergeRules(r) {
+  const base = defaultRules();
+  const out = { ...base, ...(r || {}) };
+  if (!Array.isArray(out.templates) || !out.templates.length) out.templates = base.templates;
+  if (!Array.isArray(out.days)) out.days = [];
+  if (!Array.isArray(out.fit) || !out.fit.length) out.fit = base.fit;
+  if (!Array.isArray(out.missingEquip)) out.missingEquip = [];
+  return out;
+}
+let rules = defaultRules();
+function loadRules() { try { rules = mergeRules(JSON.parse(lsGet(RULES_KEY) || 'null')); } catch (_) { rules = defaultRules(); } }
+function saveRules() { lsSet(RULES_KEY, JSON.stringify(rules)); }
+function tplById(id) { return rules.templates.find(t => t.id === id) || rules.templates[0]; }
+
+// ── Téma: pozná se i z ručně psaného zaměření („rychlý útok“ → Rychlý útok) ──
+function topicOptions() { const d = facetDefOf('topics'); return d ? d.options : []; }
+function themeFromText(txt) {
+  const n = normalize(txt);
+  if (!n) return '';
+  const o = topicOptions().find(o => [o.label, o.short].filter(Boolean)
+    .some(l => { const k = normalize(l).replace(/\s*\(.*\)\s*$/, ''); return k && n.includes(k); }));
+  return o ? o.id : '';
+}
+function lastTheme(beforeDate) {
+  const list = allPlans().filter(p => p.date && p.date < beforeDate && p.id !== meta.libId)
+    .sort((a, b) => (b.date + (b.time || '')).localeCompare(a.date + (a.time || '')));
+  for (const p of list) { const t = themeFromText(p.focus); if (t) return t; }
+  return '';
+}
+function daysBetween(a, b) { return Math.round((new Date(b) - new Date(a)) / 86400000); }
+
+// ── Výběr cvičení ──────────────────────────────────────────────────────────
+function fitsRules(d, players) {
+  if (d.section !== section || markOf(d.id).hidden) return false;
+  const u = facetVals(d, 'u13');
+  if (u.length && !u.some(v => rules.fit.includes(v))) return false;
+  if (players && drillMinPlayers(d) > players) return false;
+  if (drillEquipGroups(d).some(g => (rules.missingEquip || []).includes(g))) return false;
+  return true;
+}
+function resolveTopics(spec, ctx) {
+  if (spec.topic === 'theme') return ctx.theme ? [ctx.theme] : [];
+  if (spec.topic === 'last') return ctx.lastTheme ? [ctx.lastTheme] : (ctx.theme ? [ctx.theme] : []);
+  if (spec.topic === 'fixed') return spec.topics || [];
+  return [];
+}
+// Pořadí kandidátů: nejdřív na téma, pak body za oblíbené / dlouho nepoužité.
+// Malá náhoda, aby „Vygenerovat znovu“ dalo jiný, ale pořád vhodný výběr.
+function rankDrills(spec, topics, ctx) {
+  return allDrills
+    .filter(d => !ctx.used.has(d.id) && (spec.parts || []).some(p => facetVals(d, 'part').includes(p)) && fitsRules(d, ctx.players)
+      && (!(spec.forms || []).length || spec.forms.includes(facetVals(d, 'form')[0])))
+    .map(d => {
+      const onTopic = !topics.length || facetVals(d, 'topics').some(t => topics.includes(t));
+      let s = Math.random() * 1.5;
+      if (rules.preferFav && markOf(d.id).fav) s += 2;
+      if (rules.preferUnused) {
+        const u = usageOf(d.id);
+        if (!u) s += 1.5;
+        else if (u.last && daysBetween(u.last, ctx.date) < 21) s -= 3;
+      }
+      if (facetVals(d, 'u13').includes('yes')) s += 0.5;
+      // Šuplíky v archivu nejsou dokonalé: téma uvedené jako první je hlavní, jinak jde často jen o vedlejší prvek
+      if (topics.length && topics.includes(facetVals(d, 'topics')[0])) s += 2;
+      if (spec.prog && (Number(d.durationMinutes) || 10) < 4) s -= 2;
+      return { d, onTopic, s };
+    })
+    .sort((a, b) => (b.onTopic - a.onTopic) || (b.s - a.s));
+}
+function progKey(d) {
+  const f = FORM_RANK[facetVals(d, 'form')[0]] ?? 2;
+  const p = Math.min(9, ...facetVals(d, 'part').map(x => PART_RANK[x] ?? 2));
+  return f * 10 + p;
+}
+function fillBlock(spec, minutes, topics, ctx) {
+  const ranked = rankDrills(spec, topics, ctx);
+  const items = [];
+  let left = minutes;
+  const take = (budget, pred) => {
+    let b = Math.min(budget, left);
+    for (const c of ranked) {
+      if (b < 3) break;
+      if (ctx.used.has(c.d.id) || (pred && !pred(c.d))) continue;
+      if (pred && topics.length && !c.onTopic) continue; // ve fázích nácviku držet téma
+      const dur = Number(c.d.durationMinutes) || 10;
+      if (dur > b + 2) continue;
+      const use = Math.min(dur, b);
+      items.push({ drill: c.d, duration: use, notes: '' });
+      ctx.used.add(c.d.id);
+      b -= use; left -= use;
+    }
+  };
+  if (spec.prog) STAGES.forEach(st => take(Math.round(minutes * st.share), st.ok));
+  take(left);
+  // Zbytek do 5 min přidat poslednímu cvičení, ať blok sedí na čas
+  if (left > 0 && left <= 5 && items.length) items[items.length - 1].duration += left;
+  if (spec.prog) items.sort((a, b) => progKey(a.drill) - progKey(b.drill));
+  return items;
+}
+
+function generateTraining(o) {
+  const tpl = tplById(o.tpl);
+  if (!tpl) return;
+  const sum = tpl.blocks.reduce((s, b) => s + (Number(b.minutes) || 0), 0) || 1;
+  const ctx = { theme: o.theme, lastTheme: o.lastTheme, players: o.players, date: meta.date || todayStr(), used: new Set() };
+  const nb = tpl.blocks.map(spec => ({
+    id: uid(), name: spec.name,
+    plannedMinutes: Math.max(5, Math.round((Number(spec.minutes) || 0) * o.minutes / sum)),
+    items: [],
+    gen: { parts: [...(spec.parts || [])], topic: spec.topic, topics: resolveTopics(spec, ctx), prog: !!spec.prog, forms: [...(spec.forms || [])] }
+  }));
+  // Bloky s tématem se plní první, ať dostanou nejlepší cvičení na téma
+  [...nb].sort((a, b) => (a.gen.topics.length ? 0 : 1) - (b.gen.topics.length ? 0 : 1))
+    .forEach(b => { b.items = fillBlock(b.gen, b.plannedMinutes, b.gen.topics, ctx); });
+  blocks = nb;
+  const usesLast = tpl.blocks.some(b => b.topic === 'last');
+  const themeId = usesLast && !tpl.blocks.some(b => b.topic === 'theme') ? (o.lastTheme || o.theme) : o.theme;
+  if (themeId) meta.focus = facetLbl('topics', themeId);
+  meta.target = o.minutes;
+  meta.dirty = true;
+  saveMeta();
+  savePlan();
+  swapSeen = {};
+  halaIdx = 0;
+}
+
+// Pravidla pro blok, který vznikl ručně: podle názvu bloku a zaměření tréninku
+function blockSpec(b) {
+  if (b.gen) return b.gen;
+  const part = guessPart(b.name);
+  const theme = themeFromText(meta.focus);
+  const useTheme = theme && part !== 'warmup' && part !== 'fitness';
+  return { parts: part ? [part] : PART_ORDER.slice(), topic: useTheme ? 'theme' : 'any', topics: useTheme ? [theme] : [], prog: part === 'main' };
+}
+function regenBlock(id) {
+  const b = blocks.find(x => x.id === id);
+  if (!b) return;
+  if (b.items.length && !confirm(`Nahradit cvičení v bloku „${b.name}“ novým výběrem?`)) return;
+  const spec = blockSpec(b);
+  const minutes = b.items.length ? blockDuration(b) : b.plannedMinutes;
+  const used = new Set(blocks.filter(x => x !== b).flatMap(x => x.items.map(i => i.drill.id)));
+  b.items.forEach(i => used.add(i.drill.id)); // ať se nabídne něco jiného než dosud
+  const ctx = { players: rules.players, date: meta.date || todayStr(), used };
+  let items = fillBlock(spec, minutes, spec.topics || [], ctx);
+  if (!items.length) {
+    b.items.forEach(i => used.delete(i.drill.id));
+    items = fillBlock(spec, minutes, spec.topics || [], ctx);
+  }
+  if (!items.length) { toast('Pro tento blok není v archivu nic vhodného'); return; }
+  b.items = items;
+  b.plannedMinutes = minutes;
+  savePlan();
+  render();
+  toast(`✨ Blok „${b.name}“ vygenerován`);
+}
+
+let swapSeen = {}; // blockId -> cvičení, která už se v bloku nabídla (ať se výměna netočí dokola)
+function swapDrill(blockId, drillId, fromSheet) {
+  const b = blocks.find(x => x.id === blockId);
+  if (!b) return;
+  const idx = b.items.findIndex(i => i.drill.id === drillId);
+  if (idx < 0) return;
+  const cur = b.items[idx];
+  const spec = blockSpec(b);
+  const seen = swapSeen[blockId] || (swapSeen[blockId] = new Set());
+  seen.add(drillId);
+  const inPlan = new Set(blocks.flatMap(x => x.items.map(i => i.drill.id)));
+  const ctx = { players: rules.players, date: meta.date || todayStr(), used: new Set([...inPlan, ...seen]) };
+  let ranked = rankDrills(spec, spec.topics || [], ctx);
+  if (!ranked.length) {
+    seen.clear(); seen.add(drillId);
+    ctx.used = inPlan;
+    ranked = rankDrills(spec, spec.topics || [], ctx);
+  }
+  // Podobná délka a forma jako původní cvičení, ať nerozbije čas ani postup nácviku
+  const curForm = FORM_RANK[facetVals(cur.drill, 'form')[0]] ?? 2;
+  const pick = ranked.map(c => ({ ...c,
+      s2: c.s - Math.abs((Number(c.d.durationMinutes) || 10) - cur.duration) * 0.3
+             - Math.abs((FORM_RANK[facetVals(c.d, 'form')[0]] ?? 2) - curForm) * (spec.prog ? 1.5 : 0) }))
+    .sort((a, b) => (b.onTopic - a.onTopic) || (b.s2 - a.s2))[0];
+  if (!pick) { toast('Jiné vhodné cvičení v archivu není'); return; }
+  b.items[idx] = { drill: pick.d, duration: cur.duration, notes: '' };
+  savePlan();
+  if (fromSheet && sheet && sheet.mode === 'item') sheet.drillId = pick.d.id;
+  render();
+  toast(`↻ ${pick.d.title}`);
+}
+
+// ── Kontrola tréninku podle pravidel ───────────────────────────────────────
+function trainingChecks() {
+  const out = [];
+  const all = blocks.flatMap(b => b.items);
+  if (!all.length) return out;
+  const total = blocks.reduce((s, b) => s + blockDuration(b), 0);
+  if (meta.target && Math.abs(total - meta.target) > 5) out.push(`Trénink má ${total} min, plánováno je ${meta.target} min.`);
+  if (!all.some(i => facetVals(i.drill, 'part').includes('game'))) out.push('Chybí herní forma (malá hra). Podle metodiky patří na konec tréninku.');
+  const theme = themeFromText(meta.focus);
+  blocks.forEach(b => {
+    if (!b.items.length) { out.push(`Blok „${b.name}“ je prázdný.`); return; }
+    if (b.gen && b.plannedMinutes - blockDuration(b) > 5) out.push(`Blok „${b.name}“: chybí ${b.plannedMinutes - blockDuration(b)} min, v archivu není dost vhodných cvičení.`);
+    if (b.gen && b.gen.prog) {
+      const keys = b.items.map(i => progKey(i.drill));
+      if (keys.some((k, i) => i && k < keys[i - 1])) out.push(`Blok „${b.name}“ nejde od jednoduchého ke hře. Zkuste ✨ nebo přeřaďte cvičení.`);
+    }
+    if (theme && b.gen && (b.gen.topic === 'theme' || b.gen.topic === 'last')) {
+      const off = b.items.filter(i => !facetVals(i.drill, 'topics').includes(theme)).length;
+      if (off) out.push(`Blok „${b.name}“: ${off}× cvičení mimo téma ${facetLbl('topics', theme)}.`);
+    }
+  });
+  const young = !['U15', 'U17', 'Dospělí'].includes(rules.category);
+  const adapt = all.filter(i => facetVals(i.drill, 'u13').includes('adapt')).length;
+  const unfit = all.filter(i => { const u = facetVals(i.drill, 'u13'); return u.length && !u.some(v => rules.fit.includes(v)); }).length;
+  if (young && adapt && rules.fit.includes('adapt')) out.push(`${adapt}× cvičení označené „upravit“: projděte, jak ho zjednodušit.`);
+  if (unfit) out.push(`${unfit}× cvičení neodpovídá kategorii ${rules.category}.`);
+  return out;
+}
+function checkBox() {
+  if (!rules.checks || !blocks.some(b => b.items.length)) return '';
+  const list = trainingChecks();
+  if (!list.length) return `<div class="check-box ok"><b>✓ Kontrola podle pravidel</b>Trénink odpovídá nastaveným pravidlům.</div>`;
+  return `<div class="check-box"><b>⚠️ Kontrola podle pravidel</b><ul>${list.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`;
+}
+
+// ── Okno Vygenerovat ───────────────────────────────────────────────────────
+let genForm = null;
+function chipH(label, on, onclick) { return `<span class="chip filter ${on ? 'on' : ''}" onclick="${onclick}">${esc(label)}</span>`; }
+function openGen() {
+  const date = meta.date || todayStr();
+  const day = (rules.days || []).find(x => x.dow === dowOf(date));
+  const tpl = tplById(day && day.tpl);
+  const last = lastTheme(date);
+  genForm = {
+    tpl: tpl ? tpl.id : '',
+    minutes: Number(meta.target) || (day && day.minutes) || 90,
+    // Bez zadaného zaměření pokračuje téma týdne z minulého tréninku (dá se změnit)
+    theme: themeFromText(meta.focus) || last,
+    lastTheme: last,
+    players: rules.players || 12,
+    dayHint: day && tpl ? `${DOW[day.dow]}: podle nastavení „${tpl.name}“` : ''
+  };
+  sheet = { mode: 'gen' };
+  history.pushState({ sheet: 1 }, '');
+  renderGen();
+  showSheet();
+}
+function setGen(k, v) { genForm[k] = v; renderGen(); }
+function renderGen() {
+  const el = document.getElementById('sheet');
+  const f = genForm;
+  const tpl = tplById(f.tpl);
+  if (!tpl) return;
+  const sum = tpl.blocks.reduce((s, b) => s + (Number(b.minutes) || 0), 0) || 1;
+  const usesLast = tpl.blocks.some(b => b.topic === 'last');
+  const missing = EQUIP_GROUPS.filter(g => (rules.missingEquip || []).includes(g.id)).map(g => g.label);
+  let h = `<div class="sheet-head">
+      <button class="icon-btn" onclick="sheetBack()" title="Zpět">←</button>
+      <div class="sheet-title">✨ Vygenerovat trénink<small>${esc(fmtDate(meta.date || todayStr()))} · vybírá z archivu podle vašich pravidel</small></div>
+    </div>
+    <div class="sheet-body" id="sheet-body">
+      <div class="set-sec"><h3>Typ tréninku</h3>${f.dayHint ? `<div class="hint">${esc(f.dayHint)}</div>` : ''}
+        <select style="width:100%" onchange="setGen('tpl', this.value)">${rules.templates.map(t => `<option value="${esc(t.id)}" ${t.id === tpl.id ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select>
+        <div class="hint" style="margin:8px 0 0">${tpl.blocks.map(b => `${esc(b.name)} ${Math.max(5, Math.round((Number(b.minutes) || 0) * f.minutes / sum))} min`).join(' → ')}</div>
+      </div>
+      <div class="set-sec"><h3>Délka a hráči</h3>
+        <div class="set-row">
+          <span class="grow">Délka (min)</span><input type="number" min="20" max="240" step="5" value="${f.minutes}" onchange="setGen('minutes', +this.value || 90)" style="width:90px" />
+        </div>
+        <div class="set-row" style="margin-bottom:0">
+          <span class="grow">Počet hráčů</span><input type="number" min="2" max="40" value="${f.players || ''}" onchange="setGen('players', +this.value || 0)" style="width:90px" />
+        </div>
+      </div>
+      <div class="set-sec"><h3>Téma tréninku</h3>
+        ${usesLast ? `<div class="hint">Hlavní část převezme téma minulého tréninku: <b>${f.lastTheme ? esc(facetLbl('topics', f.lastTheme)) : 'žádné nenalezeno, použije se téma níže'}</b></div>` : ''}
+        <div class="chips" style="margin-top:0">${chipH('Bez tématu', !f.theme, `setGen('theme','')`)}${topicOptions().map(o => chipH(o.short || o.label, f.theme === o.id, `setGen('theme','${o.id}')`)).join('')}</div>
+      </div>
+      <div class="hint" style="font-size:12px;color:var(--text2);margin:0 2px 12px">Kategorie ${esc(rules.category)} · ${missing.length ? 'bez pomůcek: ' + esc(missing.join(', ')) : 'všechny pomůcky'} ·
+        <span style="color:#93c5fd;text-decoration:underline;cursor:pointer" onclick="openSettings(true)">upravit pravidla</span></div>
+    </div>
+    <div class="sheet-foot"><button class="btn btn-blue" onclick="runGen()">✨ Vygenerovat</button></div>`;
+  el.dataset.view = 'gen';
+  el.dataset.drill = '';
+  el.innerHTML = h;
+}
+function runGen() {
+  if (blocks.some(b => b.items.length) && !confirm('Nahradit současný obsah tréninku vygenerovaným?')) return;
+  generateTraining(genForm);
+  history.back();
+  if (tab !== 'trenink') setTab('trenink'); else render();
+  document.getElementById('main').scrollTop = 0;
+  const n = rules.checks ? trainingChecks().length : 0;
+  toast(n ? `✨ Vygenerováno · upozornění: ${n}` : '✨ Trénink vygenerován', 2500);
+}
+
+// ── Okno Nastavení tréninků ────────────────────────────────────────────────
+let tplOpen = {};
+function openSettings(replace) {
+  if (replace && sheet) { sheet = { mode: 'settings' }; renderSettings(); return; }
+  sheet = { mode: 'settings' };
+  history.pushState({ sheet: 1 }, '');
+  renderSettings();
+  showSheet();
+}
+function checkRow(k, label, small) {
+  return `<label class="set-check"><input type="checkbox" ${rules[k] ? 'checked' : ''} onchange="toggleRuleFlag('${k}')" /><span>${label}<small>${small}</small></span></label>`;
+}
+function renderSettings() {
+  const el = document.getElementById('sheet');
+  const prev = document.getElementById('sheet-body');
+  const keep = prev && el.dataset.view === 'settings' ? prev.scrollTop : 0;
+  const topics = topicOptions();
+  const parts = (facetDefOf('part') || { options: [] }).options;
+  const forms = (facetDefOf('form') || { options: [] }).options;
+  let h = `<div class="sheet-head">
+      <button class="icon-btn" onclick="sheetBack()" title="Zpět">←</button>
+      <div class="sheet-title">⚙️ Nastavení tréninků<small>Platí v tomto telefonu · ukládá se samo</small></div>
+      <button class="btn btn-blue" onclick="sheetBack()">Hotovo</button>
+    </div>
+    <div class="sheet-body" id="sheet-body">`;
+
+  h += `<div class="set-sec"><h3>Kategorie</h3>
+      <div class="hint">Podle kategorie se nabízí jen vhodná cvičení. V archivu jsou cvičení označená pro U13 jako „hodí se“, „upravit“ a „spíš pro starší“.</div>
+      <div class="chips" style="margin-top:0">${CATS.map(c => chipH(c.id, rules.category === c.id, `setCategory('${c.id}')`)).join('')}</div>
+      <div class="tb-lbl">Nabízet cvičení označená</div>
+      <div class="chips" style="margin-top:0">${['yes', 'adapt', 'older'].map(v => chipH(facetLbl('u13', v), rules.fit.includes(v), `toggleFit('${v}')`)).join('')}</div>
+    </div>`;
+
+  h += `<div class="set-sec"><h3>Hráči a pomůcky</h3>
+      <div class="set-row"><span class="grow">Obvykle chodí hráčů</span>
+        <input type="number" min="2" max="40" value="${rules.players || ''}" onchange="setRulesPlayers(this.value)" style="width:80px" /></div>
+      <div class="tb-lbl">Tyhle pomůcky nemáme (cvičení s nimi se nenabízí)</div>
+      <div class="chips" style="margin-top:0">${EQUIP_GROUPS.map(g => { const on = (rules.missingEquip || []).includes(g.id); return chipH((on ? '🚫 ' : '') + g.label, on, `toggleMissingEquip('${g.id}')`); }).join('')}</div>
+    </div>`;
+
+  h += `<div class="set-sec"><h3>Tréninkové dny</h3>
+      <div class="hint">Podle dne aplikace sama vybere typ tréninku, začátek a délku.</div>`;
+  rules.days.forEach((d, i) => {
+    h += `<div class="tb"><div class="set-row" style="margin-bottom:6px">
+        <select onchange="setDay(${i},'dow',this.value)">${[1, 2, 3, 4, 5, 6, 0].map(n => `<option value="${n}" ${d.dow === n ? 'selected' : ''}>${DOW_SHORT[n]}</option>`).join('')}</select>
+        <input type="time" value="${esc(d.time || '')}" onchange="setDay(${i},'time',this.value)" />
+        <input type="number" min="20" max="240" step="5" value="${d.minutes || 90}" onchange="setDay(${i},'minutes',this.value)" style="width:70px" /><span style="font-size:12px;color:var(--text2)">min</span>
+        <span class="grow"></span><button class="icon-btn del" onclick="removeDay(${i})" title="Smazat den">✕</button></div>
+        <select style="width:100%" onchange="setDay(${i},'tpl',this.value)">${rules.templates.map(t => `<option value="${esc(t.id)}" ${t.id === d.tpl ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select>
+      </div>`;
+  });
+  h += `<button class="btn btn-surface btn-sm" onclick="addDay()">＋ Přidat den</button></div>`;
+
+  h += `<div class="set-sec"><h3>Typy tréninku</h3>
+      <div class="hint">Z jakých bloků se trénink skládá. Každý blok bere cvičení z vybraných částí archivu a drží zvolené téma.</div>`;
+  rules.templates.forEach((t, i) => {
+    const open = tplOpen[t.id];
+    const sum = t.blocks.reduce((s, b) => s + (Number(b.minutes) || 0), 0);
+    h += `<div class="tpl"><div class="tpl-head" onclick="toggleTpl('${jsStr(t.id)}')"><b>${esc(t.name)}</b><span>${t.blocks.length} bl. · ${sum} min ${open ? '▲' : '▼'}</span></div>`;
+    if (open) {
+      h += `<div class="tpl-body"><div class="tb-lbl">Název</div>
+        <div class="set-row"><input class="grow" value="${esc(t.name)}" onchange="setTplName(${i}, this.value)" /></div>`;
+      t.blocks.forEach((b, j) => {
+        h += `<div class="tb">
+          <div class="set-row" style="margin-bottom:0">
+            <input class="grow" value="${esc(b.name)}" onchange="setTplBlock(${i},${j},'name',this.value)" />
+            <input type="number" min="3" max="120" value="${b.minutes}" onchange="setTplBlock(${i},${j},'minutes',this.value)" style="width:62px" /><span style="font-size:12px;color:var(--text2)">min</span>
+          </div>
+          <div class="set-row" style="justify-content:flex-end;margin:2px 0 0">
+            <button class="icon-btn" onclick="moveTplBlock(${i},${j},-1)" ${j === 0 ? 'disabled' : ''} title="Nahoru">↑</button>
+            <button class="icon-btn" onclick="moveTplBlock(${i},${j},1)" ${j === t.blocks.length - 1 ? 'disabled' : ''} title="Dolů">↓</button>
+            <button class="icon-btn del" onclick="removeTplBlock(${i},${j})" title="Smazat blok">✕</button>
+          </div>
+          <div class="tb-lbl">Bere cvičení z částí</div>
+          <div class="chips">${parts.map(p => chipH(p.short || p.label, (b.parts || []).includes(p.id), `toggleTplPart(${i},${j},'${p.id}')`)).join('')}</div>
+          <div class="tb-lbl">Téma</div>
+          <select style="width:100%" onchange="setTplBlock(${i},${j},'topic',this.value)">${TOPIC_MODES.map(m => `<option value="${m.id}" ${b.topic === m.id ? 'selected' : ''}>${m.label}</option>`).join('')}</select>
+          ${b.topic === 'fixed' ? `<div class="chips" style="margin-top:6px">${topics.map(o => chipH(o.short || o.label, (b.topics || []).includes(o.id), `toggleTplTopic(${i},${j},'${o.id}')`)).join('')}</div>` : ''}
+          <div class="tb-lbl">Forma (nic vybraného = všechny)</div>
+          <div class="chips">${forms.map(o => chipH(o.short || o.label, (b.forms || []).includes(o.id), `toggleTplForm(${i},${j},'${o.id}')`)).join('')}</div>
+          <label class="set-check" style="border:none;padding-bottom:0"><input type="checkbox" ${b.prog ? 'checked' : ''} onchange="toggleTplProg(${i},${j})" />
+            <span>Od jednoduchého ke hře<small>jednotlivě → dvojice → malé skupiny → celý tým</small></span></label>
+        </div>`;
+      });
+      h += `<div class="set-row" style="margin-bottom:0">
+          <button class="btn btn-surface btn-sm" onclick="addTplBlock(${i})">＋ Blok</button>
+          <button class="btn btn-surface btn-sm" onclick="copyTemplate(${i})">📋 Kopie</button>
+          <span class="grow"></span>
+          <button class="btn btn-red btn-sm" onclick="removeTemplate(${i})">Smazat typ</button>
+        </div></div>`;
+    }
+    h += `</div>`;
+  });
+  h += `<button class="btn btn-surface btn-sm" onclick="addTemplate()">＋ Nový typ tréninku</button></div>`;
+
+  h += `<div class="set-sec"><h3>Pravidla výběru</h3>
+      ${checkRow('preferFav', 'Přednost oblíbeným ★', 'Oblíbená cvičení se vybírají častěji')}
+      ${checkRow('preferUnused', 'Přednost dlouho nepoužitým', 'Co bylo v uložených trénincích za poslední 3 týdny, se odsune')}
+      ${checkRow('checks', 'Kontrola tréninku', 'Upozorní na chybějící hru, odbočení od tématu, postup od jednoduchého ke hře a délku')}
+    </div>
+    <div class="set-sec"><h3>Výchozí nastavení</h3>
+      <div class="hint">Vrátí kategorii U13, dny Út / St / Čt a tři typy tréninku podle norské a dánské metodiky.</div>
+      <button class="btn btn-red btn-sm" onclick="resetRules()">Obnovit výchozí</button>
+    </div>
+    </div>`;
+  el.dataset.view = 'settings';
+  el.dataset.drill = '';
+  el.innerHTML = h;
+  const body = document.getElementById('sheet-body');
+  if (body && keep) body.scrollTop = keep;
+}
+// Textová pole se ukládají bez překreslení, aby se nezavírala klávesnice
+function updRules(fn, rerender = true) { fn(); saveRules(); if (rerender) renderSettings(); }
+function setCategory(id) { updRules(() => { rules.category = id; rules.fit = [...(CATS.find(c => c.id === id) || CATS[2]).fit]; }); }
+function toggleFit(v) { updRules(() => { rules.fit = rules.fit.includes(v) ? rules.fit.filter(x => x !== v) : [...rules.fit, v]; if (!rules.fit.length) rules.fit = ['yes']; }); }
+function setRulesPlayers(v) { updRules(() => { rules.players = parseInt(v) || 0; }, false); }
+function toggleMissingEquip(g) { updRules(() => { const m = rules.missingEquip || []; rules.missingEquip = m.includes(g) ? m.filter(x => x !== g) : [...m, g]; }); }
+function toggleRuleFlag(k) { updRules(() => { rules[k] = !rules[k]; }, false); }
+function setDay(i, k, v) { updRules(() => { rules.days[i][k] = (k === 'dow' || k === 'minutes') ? (parseInt(v) || 0) : v; }, false); }
+function addDay() { updRules(() => { rules.days.push({ dow: 1, time: '17:00', minutes: 90, tpl: (rules.templates[0] || {}).id || '' }); }); }
+function removeDay(i) { updRules(() => { rules.days.splice(i, 1); }); }
+function toggleTpl(id) { tplOpen[id] = !tplOpen[id]; renderSettings(); }
+function setTplName(i, v) { updRules(() => { rules.templates[i].name = v.trim() || 'Bez názvu'; }, false); }
+function setTplBlock(i, j, k, v) { updRules(() => { rules.templates[i].blocks[j][k] = k === 'minutes' ? (parseInt(v) || 5) : v; }, k === 'topic'); }
+function toggleTplPart(i, j, p) { updRules(() => { const b = rules.templates[i].blocks[j]; b.parts = (b.parts || []).includes(p) ? b.parts.filter(x => x !== p) : [...(b.parts || []), p]; }); }
+function toggleTplTopic(i, j, t) { updRules(() => { const b = rules.templates[i].blocks[j]; b.topics = (b.topics || []).includes(t) ? b.topics.filter(x => x !== t) : [...(b.topics || []), t]; }); }
+function toggleTplForm(i, j, f) { updRules(() => { const b = rules.templates[i].blocks[j]; b.forms = (b.forms || []).includes(f) ? b.forms.filter(x => x !== f) : [...(b.forms || []), f]; }); }
+function toggleTplProg(i, j) { updRules(() => { const b = rules.templates[i].blocks[j]; b.prog = !b.prog; }, false); }
+function addTplBlock(i) { updRules(() => { rules.templates[i].blocks.push(tb('Nový blok', 10, ['main'], 'theme')); }); }
+function removeTplBlock(i, j) {
+  if (rules.templates[i].blocks.length <= 1) { toast('Typ tréninku musí mít aspoň jeden blok'); return; }
+  updRules(() => { rules.templates[i].blocks.splice(j, 1); });
+}
+function moveTplBlock(i, j, dir) {
+  const bl = rules.templates[i].blocks;
+  const k = j + dir;
+  if (k < 0 || k >= bl.length) return;
+  updRules(() => { [bl[j], bl[k]] = [bl[k], bl[j]]; });
+}
+function addTemplate() {
+  const id = 'tpl-' + Date.now();
+  tplOpen[id] = true;
+  updRules(() => { rules.templates.push({ id, name: 'Nový typ tréninku', blocks: [
+    tb('Rozcvička', 20, ['warmup'], 'any'), tb('Hlavní část', 50, ['technique', 'main'], 'theme', [], true), tb('Hra', 20, ['game'], 'theme')] }); });
+}
+function copyTemplate(i) {
+  const id = 'tpl-' + Date.now();
+  tplOpen[id] = true;
+  updRules(() => { const c = JSON.parse(JSON.stringify(rules.templates[i])); c.id = id; c.name += ' (kopie)'; rules.templates.splice(i + 1, 0, c); });
+}
+function removeTemplate(i) {
+  if (rules.templates.length <= 1) { toast('Aspoň jeden typ tréninku musí zůstat'); return; }
+  const t = rules.templates[i];
+  if (!confirm(`Smazat typ tréninku „${t.name}“?`)) return;
+  updRules(() => { rules.templates.splice(i, 1); rules.days.forEach(d => { if (d.tpl === t.id) d.tpl = rules.templates[0].id; }); });
+}
+function resetRules() {
+  if (!confirm('Vrátit všechna nastavení tréninků na výchozí (U13, Út / St / Čt)?')) return;
+  updRules(() => { rules = defaultRules(); });
+}
+
+// ── Tisk a text pro XPS ────────────────────────────────────────────────────
+function trainingTitle() { return (meta.name || '').trim() || defaultName(); }
+function dowCap(s) { if (!s) return ''; const d = DOW[dowOf(s)]; return d.charAt(0).toUpperCase() + d.slice(1); }
+function openExport() {
+  if (!blocks.some(b => b.items.length)) { toast('Trénink je zatím prázdný'); return; }
+  sheet = { mode: 'export' };
+  history.pushState({ sheet: 1 }, '');
+  renderExport();
+  showSheet();
+}
+function renderExport() {
+  const el = document.getElementById('sheet');
+  el.dataset.view = 'export';
+  el.dataset.drill = '';
+  el.innerHTML = `<div class="sheet-head">
+      <button class="icon-btn" onclick="sheetBack()" title="Zpět">←</button>
+      <div class="sheet-title">🖨️ Tisk a export<small>${esc(trainingTitle())}</small></div>
+    </div>
+    <div class="sheet-body" id="sheet-body">
+      <button class="btn btn-surface exp-btn" onclick="printPlan(false)"><span>🖨️ Tisk – stručně<small>Časy, cvičení a organizace na 1 A4</small></span></button>
+      <button class="btn btn-surface exp-btn" onclick="printPlan(true)"><span>🖨️ Tisk – podrobně<small>Celý popis každého cvičení, víc stran</small></span></button>
+      <div class="hint" style="font-size:12px;color:var(--text2);margin:-2px 2px 12px">V telefonu se otevře tisk: vyberte tiskárnu, nebo „Uložit jako PDF“.</div>
+      <button class="btn btn-blue exp-btn" onclick="copyXps()"><span>📋 Kopírovat pro XPS<small style="color:#dbeafe">Vložte do XPS, nebo text pošlete Claudovi k zápisu</small></span></button>
+      <div class="section-h">Náhled textu pro XPS</div>
+      <div class="gen-preview">${esc(xpsText())}</div>
+      <button class="btn btn-surface exp-btn" style="margin-top:12px" onclick="sharePlanText()"><span>📤 Poslat jako text<small>WhatsApp, e-mail…</small></span></button>
+    </div>`;
+}
+// Formát podle dovednosti „zápis tréninku do XPS“: téma, pak jeden řádek na blok s odrážkami •
+function xpsText() {
+  const total = blocks.reduce((s, b) => s + blockDuration(b), 0);
+  const lines = [`Téma tréninku: ${(meta.focus || '').trim() || '(doplňte)'}`];
+  lines.push([meta.date ? `${dowCap(meta.date)} ${fmtDate(meta.date)}` : '', meta.time || '', `${total} min`, rules.category].filter(Boolean).join(' · '));
+  lines.push('');
+  blocks.forEach(b => {
+    if (!b.items.length) return;
+    lines.push(`${b.name} (${blockDuration(b)} min) • ` + b.items.map(it =>
+      `${it.drill.title} (${it.duration} min)${(it.notes || '').trim() ? ' – ' + it.notes.trim() : ''}`).join(' • '));
+  });
+  return lines.join('\n');
+}
+async function copyXps() {
+  const text = xpsText();
+  try { await navigator.clipboard.writeText(text); toast('📋 Zkopírováno. Vložte do XPS, nebo pošlete Claudovi.', 3000); }
+  catch (_) { prompt('Zkopírujte text pro XPS:', text); }
+}
+function shortText(s, n) {
+  s = String(s || '').trim();
+  if (s.length <= n) return s;
+  const cut = s.slice(0, n);
+  const dot = cut.lastIndexOf('. ');
+  return dot > n * 0.5 ? cut.slice(0, dot + 1) : cut.replace(/\s+\S*$/, '') + '…';
+}
+function printPlan(detail) {
+  document.getElementById('print-area').innerHTML = printHtml(detail);
+  setTimeout(() => window.print(), 80);
+}
+function printHtml(detail) {
+  const total = blocks.reduce((s, b) => s + blockDuration(b), 0);
+  const clock = m => meta.time ? endTime(meta.time, m) : `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
+  const eq = equipList(blocks);
+  const sub = [meta.date ? `${dowCap(meta.date)} ${fmtDate(meta.date)}` : '', meta.time ? `${meta.time}–${endTime(meta.time, total)}` : '',
+    `${total} min`, rules.category, (meta.focus || '').trim() ? 'Téma: ' + meta.focus.trim() : ''].filter(Boolean).join(' · ');
+  let h = `<h1>${esc(trainingTitle())}</h1><div class="pr-sub">${esc(sub)}</div>`;
+  if (eq.length) h += `<div class="pr-eq"><b>Pomůcky:</b> ${eq.map(esc).join(', ')}</div>`;
+  let t = 0;
+  if (!detail) {
+    h += `<table><thead><tr><th>Čas</th><th>Cvičení</th><th>Min</th><th>Organizace / poznámka</th></tr></thead><tbody>`;
+    blocks.forEach(b => {
+      const bd = blockDuration(b);
+      h += `<tr class="pr-block"><td class="pr-time">${clock(t)}</td><td colspan="3">${esc(b.name)} (${bd} min)</td></tr>`;
+      let tt = t;
+      b.items.forEach(it => {
+        const org = shortText(it.drill.organization || it.drill.objective, 170);
+        h += `<tr><td class="pr-time">${clock(tt)}</td><td><b>${esc(it.drill.title)}</b></td><td class="pr-min">${it.duration}</td>
+          <td>${esc(org)}${(it.notes || '').trim() ? `<div class="pr-note">Pozn.: ${esc(it.notes.trim())}</div>` : ''}</td></tr>`;
+        tt += it.duration;
+      });
+      t += bd;
+    });
+    h += `</tbody></table>`;
+    return h;
+  }
+  const list = (arr, lbl, ord) => arr && arr.length
+    ? `<div class="pr-lbl">${lbl}</div><${ord ? 'ol' : 'ul'}>${arr.map(x => `<li>${esc(x)}</li>`).join('')}</${ord ? 'ol' : 'ul'}>` : '';
+  blocks.forEach(b => {
+    const bd = blockDuration(b);
+    h += `<h2>${clock(t)} · ${esc(b.name)} (${bd} min)</h2>`;
+    let tt = t;
+    b.items.forEach(it => {
+      const d = it.drill;
+      h += `<div class="pr-drill"><h3>${clock(tt)} · ${esc(d.title)} (${it.duration} min)</h3>`;
+      if ((it.notes || '').trim()) h += `<div class="pr-note">Pozn.: ${esc(it.notes.trim())}</div>`;
+      if (d.objective) h += `<div><b>Cíl:</b> ${esc(d.objective)}</div>`;
+      if (d.organization) h += `<div><b>Organizace:</b> ${esc(d.organization)}</div>`;
+      h += list(d.execution, 'Průběh', true) + list(d.coachingPoints, 'Klíčové pokyny') + list(d.commonMistakes, 'Časté chyby') + list(d.progressions, 'Varianty');
+      const m = [d.playerCount, d.courtZone, ...(d.equipment || [])].filter(Boolean);
+      if (m.length) h += `<div class="pr-meta">${m.map(esc).join(' · ')}</div>`;
+      h += `</div>`;
+      tt += it.duration;
+    });
+    t += bd;
+  });
+  return h;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
